@@ -34,7 +34,7 @@
 // battery saver
 // do not start software if battery is too low
 // flashes 2 times repeatedly at startup
-#define STOP_LOWBATTERY
+//#define STOP_LOWBATTERY
 
 // under this voltage the software will not start 
 // if STOP_LOWBATTERY is defined above
@@ -125,8 +125,8 @@
 
 // Radio protocol selection
 // select only one
-#define RX_CG023_PROTOCOL
-//#define RX_H7_PROTOCOL
+//#define RX_CG023_PROTOCOL
+#define RX_H7_PROTOCOL
 //#define RX_BAYANG_PROTOCOL
 //#define RX_CX10BLUE_PROTOCOL
 

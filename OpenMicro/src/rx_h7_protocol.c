@@ -140,13 +140,13 @@ void nextchannel(void)
 int decode_h7(void) {		
 	if (rxdata[8] != calc_checksum() ) return 0;
 	
-		rx[3] = 0.0045000f * (225 - rxdata[0]);
+		rx[3] = 0.00390625f * (225 - rxdata[0]);
 
-		rx[1] = ( ((int)rxdata[3]) - 112) * 0.00888888f;
+		rx[1] = ( ((int)rxdata[3]) - 112) * 0.00166666f;
 
-		rx[0] = ( ((int)rxdata[2]) - 112) * 0.00888888f; // roll
+		rx[0] = ( ((int)rxdata[2]) - 112) * 0.00166666f; // roll
 
-		rx[2] = (-((int)rxdata[1]) + 112) * 0.00888888f;
+		rx[2] = (-((int)rxdata[1]) + 112) * 0.00166666f;
 
 		//rxdata[4] L-R: default:32, (63..1)
 		//rxdata[5] F-B: default:32, (1..63)
