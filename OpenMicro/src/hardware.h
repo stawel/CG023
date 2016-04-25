@@ -70,6 +70,8 @@
 
 //disable pins so they don't interfere with other pins 
 //#define DISABLE_SPI_PINS
+#define ENABLE_SPI_STM32F0
+//#define ENABLE_SOFT_SPI
 
 #define SPI_MISO_PIN GPIO_Pin_6
 #define SPI_MISO_PORT GPIOA

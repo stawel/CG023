@@ -5,7 +5,7 @@
 #include "binary.h"
 #include "config.h"
 
-#ifndef DISABLE_SPI_PINS	
+#ifdef ENABLE_SOFT_SPI
 
 void spi_init(void)
 {    
@@ -153,8 +153,9 @@ int spi_sendrecvbyte2( int data)
 
 
 #pragma pop
+#endif
 
-#else
+#ifdef DISABLE_SPI_PINS
 // spi disabled (for pin setting)
 
 void spi_init(void)

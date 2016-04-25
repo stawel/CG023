@@ -27,17 +27,15 @@ THE SOFTWARE.
 #include "util.h"
 #include "drv_time.h"
 
-
 // calculates the coefficient for lpf filter, times in the same units
 float lpfcalc(float sampleperiod, float filtertime) {
-float ga = 1.0f - sampleperiod / filtertime;
-if (ga > 1.0f)
-	ga = 1.0f;
-if (ga < 0.0f)
-	ga = 0.0f;
-return ga;
+	float ga = 1.0f - sampleperiod / filtertime;
+	if (ga > 1.0f)
+		ga = 1.0f;
+	if (ga < 0.0f)
+		ga = 0.0f;
+	return ga;
 }
-
 
 float mapf(float x, float in_min, float in_max, float out_min, float out_max)
 {
