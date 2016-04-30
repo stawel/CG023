@@ -1,15 +1,14 @@
+#ifndef XN297_H
+#define XN297_H
 
+#include <stdint.h>
 
-void xn_writerxaddress(  int *addr )	;
-void xn_writereg( int reg , int val);
-int xn_command( int command);
-int xn_readreg( int reg);
-void _spi_write_address( int reg, int val);
-void xn_readpayload( int *data , int size );
-void xn_writepayload( int data[] , int size );
-void xn_writerxaddress(  int *addr )	;
-void xn_writetxaddress(  int *addr )	;
-
+void xn_writerxaddress(uint8_t *addr);
+void xn_writereg(uint8_t reg, uint8_t val);
+uint8_t xn_command(uint8_t command);
+uint8_t xn_readreg(uint8_t reg);
+void xn_readpayload(uint8_t *data, uint8_t size);
+void xn_writepayload(uint8_t data[], uint8_t size);
 
 // registers
 #define CONFIG      0x00
@@ -88,16 +87,4 @@ void xn_writetxaddress(  int *addr )	;
 #define REUSE_TX_PL   0xE3
 #define NOP           0xFF
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif

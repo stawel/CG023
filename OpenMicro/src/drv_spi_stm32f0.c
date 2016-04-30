@@ -58,7 +58,7 @@ void spi_csoff() {
 }
 
 
-int spi_sendrecvbyte(int data) {
+uint8_t spi_sendrecvbyte(uint8_t data) {
     *(uint8_t *)&(SPI1->DR) = data;
 
     while(!(SPI1->SR & SPI_SR_RXNE));
@@ -66,11 +66,11 @@ int spi_sendrecvbyte(int data) {
     return (uint8_t)SPI1->DR;
 }
 
-int spi_sendzerorecvbyte() {
+uint8_t spi_sendzerorecvbyte() {
     return spi_sendrecvbyte(0);
 }
 
-void spi_sendbyte(int data) {
+void spi_sendbyte(uint8_t data) {
     spi_sendrecvbyte(data);
 }
 
