@@ -3,6 +3,57 @@
 
 #include "project.h"
 #include "xn297.h"
+#include "xn_debug.h"
+#include "drv_time.h"
+
+#define XN297_CE_PIN    GPIO_Pin_0
+#define XN297_CE_PORT   GPIOB
+
+static const uint8_t bbcal[6] = { 0x3f, 0x4c, 0x84, 0x6F, 0x9c, 0x20 };
+static const uint8_t rfcal[8] = { 0x3e, 0xc9, 220, 0x80, 0x61, 0xbb, 0xab, 0x9c };
+static const uint8_t demodcal[6] = { 0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03 };
+
+void writeregs(const uint8_t data[], uint8_t size) {
+
+    spi_cson();
+    for (uint8_t i = 0; i < size; i++) {
+        spi_sendbyte(data[i]);
+    }
+    spi_csoff();
+    delay(1000);
+}
+
+static void configure_ce_GPIO() {
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_InitStructure.GPIO_Pin = XN297_CE_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(XN297_CE_PORT, &GPIO_InitStructure);
+}
+
+void xn_ceon() {
+    XN297_CE_PORT->BSRR = XN297_CE_PIN;
+}
+
+void xn_ceoff() {
+    XN297_CE_PORT->BRR = XN297_CE_PIN;
+}
+
+
+void xn_init()
+{
+    configure_ce_GPIO();
+    xn_ceon();
+
+    writeregs(bbcal, sizeof(bbcal));
+    writeregs(rfcal, sizeof(rfcal));
+    writeregs(demodcal, sizeof(demodcal));
+
+    xn_debug_init();
+}
 
 void xn_writereg(uint8_t reg, uint8_t val) {
     reg = reg & 0x1F;
@@ -40,7 +91,7 @@ void xn_readpayload(uint8_t *data, uint8_t size) {
     spi_csoff();
 }
 
-void xn_writedata(uint8_t reg, uint8_t *addr, uint8_t size) {
+void xn_writedata(uint8_t reg,const uint8_t *addr, uint8_t size) {
     uint8_t index = 0;
     spi_cson();
     spi_sendbyte(reg | W_REGISTER);
@@ -51,15 +102,27 @@ void xn_writedata(uint8_t reg, uint8_t *addr, uint8_t size) {
     spi_csoff();
 }
 
-void xn_writerxaddress(uint8_t *addr) {
+void xn_writerxaddress(const uint8_t *addr) {
     xn_writedata(RX_ADDR_P0, addr, 5);
 }
 
-void xn_writetxaddress(uint8_t *addr) {
+void xn_writetxaddress(const uint8_t *addr) {
     xn_writedata(TX_ADDR, addr, 5);
 }
 
-void xn_writepayload(uint8_t data[], uint8_t size) {
+void xn_writepayload(const uint8_t data[], uint8_t size) {
     xn_writedata(W_TX_PAYLOAD, data, size);
 }
 
+void xn_setchannel(uint8_t channel) {
+    xn_debug_send();
+    xn_ceoff();
+    xn_writereg(RF_CH, channel);
+    xn_writereg(CONFIG, (1<<PWR_UP) | (1<<CRCO)  | (1<<EN_CRC) | (1<<PRIM_RX)); // power up, crc enabled, PTX
+    xn_ceon();
+}
+
+uint8_t xn_getstatus()
+{
+    return xn_command(0);
+}

@@ -3,12 +3,20 @@
 
 #include <stdint.h>
 
-void xn_writerxaddress(uint8_t *addr);
+void xn_init();
+void xn_writerxaddress(const uint8_t *addr);
+void xn_writetxaddress(const uint8_t *addr);
 void xn_writereg(uint8_t reg, uint8_t val);
 uint8_t xn_command(uint8_t command);
 uint8_t xn_readreg(uint8_t reg);
 void xn_readpayload(uint8_t *data, uint8_t size);
-void xn_writepayload(uint8_t data[], uint8_t size);
+void xn_writepayload(const uint8_t data[], uint8_t size);
+
+void xn_setchannel(uint8_t channel);
+uint8_t xn_getstatus();
+
+void xn_ceon();
+void xn_ceoff();
 
 // registers
 #define CONFIG      0x00
