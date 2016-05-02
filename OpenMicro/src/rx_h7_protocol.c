@@ -53,6 +53,7 @@ extern char auxchange[AUXNUMBER];
 
 #define PACKET_SIZE 9   // packets have 9-byte payload
 #define SKIPCHANNELTIME 28000
+#define PACKET_PERIOD    2625
 
 
 int failsafe = 0;
@@ -104,15 +105,14 @@ static uint8_t calc_checksum(void) {
     return result & 0xFF;
 }
 
-static void nextchannel(void)
+static void set_channel(uint8_t ch)
 {
-	channel++;
-	if(channel > 15) channel = 0;
+	channel = ch & 0xf;
 	xn_setchannel(H7_freq[channel] + channeloffset); // Set channel frequency
 }
 
 
-int decode_h7(void) {		
+int decode_h7(void) {
 	if (rxdata[8] != calc_checksum())
         return 0;
 
@@ -151,20 +151,15 @@ int decode_h7(void) {
     return 1;
 }
 
-static unsigned long failsafetime;
 static unsigned long lastrxtime;
-
-#define DEBUG
-
-#ifdef DEBUG
-int failcount = 0;
-int chan[16];
-#endif
+static unsigned long lastrxchannel;
 
 void checkrx(void) {
     unsigned long time = gettime();
     if (checkpacket()) {
         xn_readpayload(rxdata, PACKET_SIZE);
+        lastrxtime = xn_getirqtime();
+        lastrxchannel = channel;
         if (rxmode == RXMODE_BIND) {	// rx startup , bind mode
             if (rxdata[0] == 0x20) {	// bind packet received
                 rxaddress[0] = rxdata[4];
@@ -175,35 +170,30 @@ void checkrx(void) {
 
                 channeloffset = (((rxdata[7] & 0xf0) >> 4) + (rxdata[7] & 0x0f)) % 8;
                 xn_command(FLUSH_RX);
-                nextchannel();
                 checksum_offset = rxdata[7];
             }
         } else {	// normal mode
             if (decode_h7()) {
-                failsafetime = time;
-                lastrxtime = failsafetime;
                 failsafe = 0;
-#ifdef DEBUG
-                chan[channel]++;
-#endif
-                nextchannel();
-            } else {
-#ifdef DEBUG
-                failcount++;
-#endif
             }
         }	// end normal rx mode
 	}	// end packet received
 
-    LogDebug("f:", failcount, " ch:", channel, " t:", time, " t2:" , gettime() - time);
+    unsigned long timediff = time - lastrxtime;
+    unsigned long package = timediff / PACKET_PERIOD;
 
-	if ( time - lastrxtime > SKIPCHANNELTIME && rxmode != RXMODE_BIND)
-	{
-		nextchannel();
-		lastrxtime= time;	
-	}
+    if(package > 16) {
+        package /= 16;
+    }
+    package++;
+    unsigned long time2 = gettime();
+    if(((package + lastrxchannel) & 0xf) != channel) {
+        set_channel(package + lastrxchannel);
+    }
 
-	if (time - failsafetime > FAILSAFETIME) {	//  failsafe
+    LogDebug("t:", time, " l:", lastrxtime , " p:", package," ch:", channel, " td:" , gettime() - time, " t2:", gettime() - time2);
+
+	if (timediff > FAILSAFETIME) {	//  failsafe
 		failsafe = 1;
 		rx[0] = 0;
 		rx[1] = 0;

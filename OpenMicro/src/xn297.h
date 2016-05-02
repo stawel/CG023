@@ -17,6 +17,7 @@ uint8_t xn_getstatus();
 
 void xn_ceon();
 void xn_ceoff();
+uint32_t xn_getirqtime();
 
 // registers
 #define CONFIG      0x00

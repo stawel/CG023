@@ -24,40 +24,40 @@ static __INLINE uint32_t SysTick_Config2(uint32_t ticks)
 }
 
 
-void time_init()
-{
+void time_init() {
 
-	  if (SysTick_Config2( 48000000/8 ))
-    {// not able to set divider
-			  failloop(5);
-        while (1);
+    if (SysTick_Config2(48000000 / 8)) { // not able to set divider
+        failloop(5);
     }
 }
 
 // called at least once per second or time will overflow
 unsigned long time_update(void)
 {
-unsigned long maxticks = SysTick->LOAD;	
-unsigned long ticks = SysTick->VAL;	
-unsigned long elapsedticks;	
+    unsigned long maxticks = SysTick->LOAD;
+    unsigned long ticks;
+    unsigned long elapsedticks;
 
-	if (ticks < lastticks) elapsedticks = lastticks - ticks;	
-	else
-	{// overflow ( underflow really)
-	elapsedticks = lastticks + ( maxticks - ticks);			
-	}
-	
-lastticks = ticks;
-globalticks = globalticks+ elapsedticks/6;
-return globalticks;	
+    __disable_irq();
+    ticks = SysTick->VAL;
+    if (ticks < lastticks)
+        elapsedticks = lastticks - ticks;
+    else { // overflow ( underflow really)
+        elapsedticks = lastticks + (maxticks - ticks);
+    }
+
+    lastticks = ticks;
+    globalticks = globalticks + elapsedticks / 6;
+    __enable_irq();
+
+    return globalticks;
 }
 
 
 // return time in uS from start ( micros())
-unsigned long gettime()
-{
-unsigned long time = time_update();
-return time;		
+unsigned long gettime() {
+    unsigned long time = time_update();
+    return time;
 }
 
 // delay in uS
