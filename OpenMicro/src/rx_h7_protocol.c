@@ -191,7 +191,8 @@ void checkrx(void) {
         set_channel(package + lastrxchannel);
     }
 
-    LogDebug("t:", time, " l:", lastrxtime , " p:", package," ch:", channel, " td:" , gettime() - time, " t2:", gettime() - time2);
+    //LogDebug("t:", gettime() - time2);
+    //LogDebug("t:", time, " l:", lastrxtime , " p:", package," ch:", channel, " td:" , gettime() - time, " t2:", gettime() - time2);
 
 	if (timediff > FAILSAFETIME) {	//  failsafe
 		failsafe = 1;

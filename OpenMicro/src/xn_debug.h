@@ -36,12 +36,14 @@ void xn_debug_printnl();
 #define LogDebug_N2(N, args...) LogDebug_ ## N(args)
 #define LogDebug_N(N, args...) LogDebug_N2(N, args)
 #define LogDebug(args...) do { LogDebug_N(NUM_ARGS(args), args); xn_debug_printnl(); } while(0)
+#define LogDebug2(args...) do { LogDebug_N(NUM_ARGS(args), args); } while(0)
 
 #define runDebug(x) x
 
 #else
 
 #define LogDebug(...)
+#define LogDebug2(...)
 #define runDebug(x)
 
 #endif

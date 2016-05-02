@@ -15,7 +15,7 @@
 
 
 static const uint8_t bbcal[6] = { 0x3f, 0x4c, 0x84, 0x6F, 0x9c, 0x20 };
-static const uint8_t rfcal[8] = { 0x3e, 0xc9, 220, 0x80, 0x61, 0xbb, 0xab, 0x9c };
+static const uint8_t rfcal[8] = {0x3e, 0xc9, 220, 0x80, 0x61, 0xbb, 0xab, 0x9c };
 static const uint8_t demodcal[6] = { 0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03 };
 
 static volatile uint32_t irqtime;
@@ -81,7 +81,7 @@ void xn_init()
     configure_IRQ_GPIO();
     xn_ceon();
 
-    writeregs(bbcal, sizeof(bbcal));
+    //writeregs(bbcal, sizeof(bbcal));
     writeregs(rfcal, sizeof(rfcal));
     writeregs(demodcal, sizeof(demodcal));
 
