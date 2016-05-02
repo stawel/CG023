@@ -6,7 +6,7 @@
 #define XN_DEBUG_PACKAGE 16
 
 static const uint8_t txaddress[5] = {0xcc, 0xcc, 0xcc, 0xcc, 0xcc};
-static uint8_t data[XN_DEBUG_BUFFER+XN_DEBUG_PACKAGE];
+static uint8_t data[XN_DEBUG_BUFFER];
 static uint32_t size;
 static uint32_t pos;
 
@@ -16,17 +16,18 @@ static uint32_t pos;
 
 void xn_debug_print_ptr(char c, void * ptr) {
     if(size + 5 >= XN_DEBUG_BUFFER) {
-        size = XN_DEBUG_BUFFER;
-        return;
+        for(;size<XN_DEBUG_BUFFER;size++) {
+            data[size] = 'F'+128;
+        }
+    } else {
+        int32_t d = (int32_t)ptr;
+        uint8_t *d_ptr =(uint8_t *) &d;
+        data[size++] = c;
+        data[size++] = d_ptr[0];
+        data[size++] = d_ptr[1];
+        data[size++] = d_ptr[2];
+        data[size++] = d_ptr[3];
     }
-
-    int32_t d = (int32_t)ptr;
-    uint8_t *d_ptr =(uint8_t *) &d;
-    data[size++] = c;
-    data[size++] = d_ptr[0];
-    data[size++] = d_ptr[1];
-    data[size++] = d_ptr[2];
-    data[size++] = d_ptr[3];
 }
 
 void xn_debug_print(char c, void * ptr)
@@ -45,8 +46,9 @@ void xn_debug_print(char c, void * ptr)
 
 void xn_debug_printnl()
 {
-    if(size >= XN_DEBUG_BUFFER) return;
-    data[size++] = '\n';
+    if(size < XN_DEBUG_BUFFER) {
+        data[size++] = '\n';
+    }
 }
 
 
@@ -70,13 +72,12 @@ void xn_debug_send()
     if(size == 0)
         return;
     pos = 0;
-    if(size >= XN_DEBUG_BUFFER) {
-        size = XN_DEBUG_BUFFER;
+    if(size == XN_DEBUG_BUFFER) {
         data[XN_DEBUG_BUFFER-1]='F' + 128;
     }
 
-    for (uint8_t i = 0; i < XN_DEBUG_PACKAGE; i++) {
-        data[size + i] = 0;
+    for (uint32_t i = size; i < XN_DEBUG_BUFFER; i++) {
+        data[i] = 0;
     }
     xn_ceoff();
     xn_command(FLUSH_TX);

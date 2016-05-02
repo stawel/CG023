@@ -195,7 +195,7 @@ void checkrx(void) {
         }	// end normal rx mode
 	}	// end packet received
 
-    LogDebug('s', "f:", 'i', failcount, 's', " ch:", 'i', channel, 's', "t:", 'i', time);
+    LogDebug("f:", failcount, " ch:", channel, " t:", time, " t2:" , gettime() - time);
 
 	if ( time - lastrxtime > SKIPCHANNELTIME && rxmode != RXMODE_BIND)
 	{
