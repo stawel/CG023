@@ -69,7 +69,7 @@ static const uint8_t H7_freq[] = {
 };
 
 static int channeloffset;
-static int channel;
+static uint8_t channel;
 
 void rx_init() {
 
@@ -175,6 +175,7 @@ void checkrx(void) {
         } else {	// normal mode
             if (decode_h7()) {
                 failsafe = 0;
+                LogDebug("t:", time, " l:", lastrxtime , " ch:", channel);
             }
         }	// end normal rx mode
 	}	// end packet received
@@ -182,17 +183,18 @@ void checkrx(void) {
     unsigned long timediff = time - lastrxtime;
     unsigned long package = timediff / PACKET_PERIOD;
 
+    LogDebug2("p:", ((uint8_t)package));
+
     if(package > 16) {
         package /= 16;
     }
     package++;
-    unsigned long time2 = gettime();
     if(((package + lastrxchannel) & 0xf) != channel) {
         set_channel(package + lastrxchannel);
     }
 
-    //LogDebug("t:", gettime() - time2);
-    //LogDebug("t:", time, " l:", lastrxtime , " p:", package," ch:", channel, " td:" , gettime() - time, " t2:", gettime() - time2);
+    LogDebug(" c:", channel);
+
 
 	if (timediff > FAILSAFETIME) {	//  failsafe
 		failsafe = 1;

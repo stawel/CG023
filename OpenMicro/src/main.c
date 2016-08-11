@@ -49,6 +49,7 @@ THE SOFTWARE.
 #include "drv_softi2c.h"
 
 #include "binary.h"
+#include "xn_debug.h"
 
 #include <inttypes.h>
 
@@ -329,7 +330,9 @@ else
 #endif
 	
 // the delay is required or it becomes endless loop ( truncation in time routine)
-while ( (gettime() - time) < LOOPTIME ) delay(10); 		
+		do {
+		    xn_debug_send();
+		} while ( (gettime() - time) < LOOPTIME );
 
 		
 	}// end loop

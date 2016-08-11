@@ -14,6 +14,7 @@
 #define XN297_IRQ_PORT   GPIOA
 
 
+
 static const uint8_t bbcal[6] = { 0x3f, 0x4c, 0x84, 0x6F, 0x9c, 0x20 };
 static const uint8_t rfcal[8] = {0x3e, 0xc9, 220, 0x80, 0x61, 0xbb, 0xab, 0x9c };
 static const uint8_t demodcal[6] = { 0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03 };
@@ -23,11 +24,18 @@ static volatile uint32_t irqtime;
 
 void EXTI2_3_IRQHandler(void)
 {
-    if ((EXTI->PR & (1<<3)) != 0) {
-        EXTI->PR |= (1<<3); /* Clear the pending bit */
+    if ((EXTI->PR & XN297_IRQ_PIN) != 0) {
+        EXTI->PR |= XN297_IRQ_PIN; /* Clear the pending bit */
         irqtime = gettime();
     }
 }
+
+void TIM14_IRQHandler(void)
+{
+    TIM14->SR &= ~(TIM_SR_CC1OF | TIM_SR_CC1IF);
+    delay(1);
+}
+
 
 uint32_t xn_getirqtime()
 {
@@ -58,11 +66,31 @@ static void configure_ce_GPIO() {
 
 static void configure_IRQ_GPIO() {
     //SYSCFG->EXTICR[3] = SYSCFG_EXTICR1_EXTI3_PA;
-    EXTI->IMR = 1<<3;
-    EXTI->FTSR = 1<<3;
+    EXTI->IMR = XN297_IRQ_PIN;
+    EXTI->FTSR = XN297_IRQ_PIN;
 
     NVIC_EnableIRQ(EXTI2_3_IRQn);
-    NVIC_SetPriority(EXTI2_3_IRQn,0);
+    NVIC_SetPriority(EXTI2_3_IRQn, 0);
+}
+
+static void configure_timer() {
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14 , ENABLE);
+
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
+
+    TIM_TimeBaseInitStruct.TIM_Period = 0x6000;
+    TIM_TimeBaseInitStruct.TIM_Prescaler = 0x0048;
+    TIM_TimeBaseInitStruct.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
+    TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0x0000;
+
+    TIM_TimeBaseInit(TIM14, &TIM_TimeBaseInitStruct);
+    TIM_ITConfig(TIM14, TIM_IT_CC1, ENABLE);
+
+    NVIC_EnableIRQ(TIM14_IRQn);
+    NVIC_SetPriority(TIM14_IRQn, 0);
+
+    TIM_Cmd(TIM14, ENABLE);
 }
 
 
@@ -79,6 +107,7 @@ void xn_init()
 {
     configure_ce_GPIO();
     configure_IRQ_GPIO();
+    configure_timer();
     xn_ceon();
 
     //writeregs(bbcal, sizeof(bbcal));
@@ -148,11 +177,13 @@ void xn_writepayload(const uint8_t data[], uint8_t size) {
 }
 
 void xn_setchannel(uint8_t channel) {
-    xn_debug_send();
+    xn_debug_setchannel(channel);
+#ifdef DEBUG_XN___
     xn_ceoff();
     xn_writereg(RF_CH, channel);
     xn_writereg(CONFIG, (1<<PWR_UP) | (1<<CRCO)  | (1<<EN_CRC) | (1<<PRIM_RX)); // power up, crc enabled, PTX
     xn_ceon();
+#endif
 }
 
 uint8_t xn_getstatus()
