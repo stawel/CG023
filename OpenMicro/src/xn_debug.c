@@ -23,7 +23,7 @@ static uint8_t fr_setup;
 static unsigned long starttime;
 static unsigned long stoptime;
 
-static int size() {
+static int buf_size() {
     return (XN_DEBUG_BUFFER + end - begin) % XN_DEBUG_BUFFER;
 }
 
@@ -31,7 +31,7 @@ static int space_left() {
     if(buf_full) {
         return 0;
     }
-    return XN_DEBUG_BUFFER - size();
+    return XN_DEBUG_BUFFER - buf_size();
 }
 
 static void inc_end() {
@@ -117,7 +117,7 @@ int xn_debug_send_data()
 {
     if((xn_getstatus() & (1<<TX_FULL)) == 0) {
         xn_debug_writepayload();
-        if(size() < XN_DEBUG_PACKAGE && buf_full) {
+        if(buf_size() < XN_DEBUG_PACKAGE && buf_full) {
             buf_full = 0;
             xn_debug_print_char('F'+128);
         }
@@ -126,7 +126,7 @@ int xn_debug_send_data()
     return 0;
 }
 
-static void xn_debug_stop() {
+static void xn_debug_stop_transmission() {
     xn_ceoff();
     xn_writereg(RF_SETUP, fr_setup);
     tx_active = 0;
@@ -134,30 +134,28 @@ static void xn_debug_stop() {
     xn_writereg(CONFIG, (1<<PWR_UP) | (1<<CRCO)  | (1<<EN_CRC) | (1<<PRIM_RX)); // power up, crc enabled, PTX
     xn_ceon();
     stoptime = gettime();
-    LogDebug(" t:", stoptime - starttime);
+    LogDebug(" t: ", stoptime - starttime);
 }
 
-void xn_debug_send()
+void xn_debug_send_or_stop()
 {
     if(tx_active) {
         unsigned long time = gettime();
-        if(time - starttime < XN_DEBUG_TIMELIMIT) {
-            while((size() >= XN_DEBUG_PACKAGE) && xn_debug_send_data());
-        }
-
-        if(xn_readreg(FIFO_STATUS) & (1<<TX_EMPTY)) {
-            xn_debug_stop();
+        if(time - starttime < XN_DEBUG_TIMELIMIT && buf_size() >= XN_DEBUG_PACKAGE) {
+                xn_debug_send_data();
+        } else if(xn_readreg(FIFO_STATUS) & (1<<TX_EMPTY)) {
+            xn_debug_stop_transmission();
         }
     }
 }
 
-static void xn_debug_start() {
+static void xn_debug_start_transmission() {
     tx_active = 1;
     starttime = gettime();
     fr_setup = xn_readreg(RF_SETUP);
-    LogDebug2("s:", starttime);
+    LogDebug2("xn_debug s: ", starttime);
 
-    if(size() >= XN_DEBUG_PACKAGE) {
+    if(buf_size() >= XN_DEBUG_PACKAGE) {
         xn_ceoff();
         xn_writereg(STATUS, (1<<RX_DR) | (1<<TX_DS) | (1<<MAX_RT));
         xn_writereg(CONFIG, (1<<PWR_UP)| (1<<CRCO)  | (1<<EN_CRC)); // power up, crc enabled, PTX
@@ -166,13 +164,18 @@ static void xn_debug_start() {
         xn_debug_send_data();
         xn_ceon();
     }
-    xn_debug_send();
+    xn_debug_send_or_stop();
 }
 
 void xn_debug_setchannel(uint8_t channel)
 {
     rxchannel = channel;
     if(!tx_active) {
-        xn_debug_start();
+        xn_debug_start_transmission();
     }
+}
+
+void xn_debug_irq_handler(uint8_t status)
+{
+    xn_debug_send_or_stop();
 }

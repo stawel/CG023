@@ -4,11 +4,12 @@
 #include <stdint.h>
 
 void xn_debug_init();
-void xn_debug_send();
 void xn_debug_setchannel(uint8_t channel);
 
 void xn_debug_print(char c, void * ptr);
 void xn_debug_printnl();
+
+void xn_debug_irq_handler(uint8_t status);
 
 #ifdef ENABLE_DEBUG
 

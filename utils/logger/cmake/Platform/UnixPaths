@@ -1,0 +1,1 @@
+list(APPEND CMAKE_SYSTEM_PREFIX_PATH ~/aaa/arduino)

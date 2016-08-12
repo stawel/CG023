@@ -36,7 +36,7 @@
 
 #include "protocol_timer.h"
 
-#define ENABLE_DEBUG
+//#define ENABLE_DEBUG
 #include "xn_debug.h"
 
 
@@ -55,8 +55,8 @@ extern char auxchange[AUXNUMBER];
 
 #define PACKET_SIZE 9   // packets have 9-byte payload
 #define SKIPCHANNELTIME 28000
-//#define PACKET_PERIOD    2625
-#define PACKET_PERIOD    50000
+#define PACKET_PERIOD    2625
+//#define PACKET_PERIOD    50000
 
 int failsafe = 0;
 uint8_t rxdata[PACKET_SIZE];
@@ -72,6 +72,8 @@ static const uint8_t H7_freq[] = {
 
 static int channeloffset;
 static uint8_t channel_idx;
+static unsigned long lastrxtime;
+static unsigned long lastrxchannel;
 
 void rx_init() {
 
@@ -89,18 +91,6 @@ void rx_init() {
 	protocol_timer_init(PACKET_PERIOD);
 }
 
-static char checkpacket() {
-    uint8_t status = xn_getstatus();
-    xn_writereg(STATUS, (1<<RX_DR)+(1<<TX_DS));
-    LogDebug("status:", status);
-	if ((status & B00001110) != B00001110) {
-		// rx fifo not empty		
-		return 2;
-	}
-
-	return 0;
-}
-
 static uint8_t checksum_offset = 0;
 
 static uint8_t calc_checksum(void) {
@@ -110,6 +100,10 @@ static uint8_t calc_checksum(void) {
     return result & 0xFF;
 }
 
+static uint8_t check_checksum() {
+    return rxdata[8] == calc_checksum();
+}
+
 static void set_channel(uint8_t ch)
 {
 	channel_idx = ch & 0xf;
@@ -117,52 +111,56 @@ static void set_channel(uint8_t ch)
 }
 
 
-int decode_h7(void) {
-	if (rxdata[8] != calc_checksum())
-        return 0;
+void decode_h7(void) {
 
-    rx[3] = 0.00390625f * (225 - rxdata[0]);
+    unsigned long timediff = gettime() - lastrxtime;
+    if (timediff > FAILSAFETIME) {  //  failsafe
+            failsafe = 1;
+            rx[0] = 0;
+            rx[1] = 0;
+            rx[2] = 0;
+            rx[3] = 0;
+    } else {
 
-    rx[1] = (((int) rxdata[3]) - 112) * 0.00166666f;
+        failsafe = 0;
+        rx[3] = 0.00390625f * (225 - rxdata[0]);
+        rx[1] = (((int) rxdata[3]) - 112) * 0.00166666f;
+        rx[0] = (((int) rxdata[2]) - 112) * 0.00166666f; // roll
+        rx[2] = (-((int) rxdata[1]) + 112) * 0.00166666f;
 
-    rx[0] = (((int) rxdata[2]) - 112) * 0.00166666f; // roll
+        //rxdata[4] L-R: default:32, (63..1)
+        //rxdata[5] F-B: default:32, (1..63)
+        //rxdata[6] default:0, 1: F/S, 128: flip
 
-    rx[2] = (-((int) rxdata[1]) + 112) * 0.00166666f;
-
-    //rxdata[4] L-R: default:32, (63..1)
-    //rxdata[5] F-B: default:32, (1..63)
-    //rxdata[6] default:0, 1: F/S, 128: flip
-
-    aux[0] = (rxdata[6] & H7_FLIP_MASK) ? 1 : 0;
-
-    aux[1] = (rxdata[6] & H7_FLAG_VIDEO) ? 1 : 0;
-
-    aux[2] = (rxdata[6] & H7_F_S_MASK) ? 1 : 0; //??
+        aux[0] = (rxdata[6] & H7_FLIP_MASK) ? 1 : 0;
+        aux[1] = (rxdata[6] & H7_FLAG_VIDEO) ? 1 : 0;
+        aux[2] = (rxdata[6] & H7_F_S_MASK) ? 1 : 0; //??
 
 		
 #ifndef DISABLE_EXPO
-    rx[0] = rcexpo ( rx[0] , EXPO_XY );
-    rx[1] = rcexpo ( rx[1] , EXPO_XY );
-    rx[2] = rcexpo ( rx[2] , EXPO_YAW );
+        rx[0] = rcexpo ( rx[0] , EXPO_XY );
+        rx[1] = rcexpo ( rx[1] , EXPO_XY );
+        rx[2] = rcexpo ( rx[2] , EXPO_YAW );
 #endif
 	
-	for (int i = 0; i < AUXNUMBER - 2; i++) {
-        auxchange[i] = 0;
-        if (lastaux[i] != aux[i])
-            auxchange[i] = 1;
-        lastaux[i] = aux[i];
+        for (int i = 0; i < AUXNUMBER - 2; i++) {
+            auxchange[i] = 0;
+            if (lastaux[i] != aux[i])
+                auxchange[i] = 1;
+            lastaux[i] = aux[i];
+        }
     }
-
-    return 1;
 }
-
-static unsigned long lastrxtime;
-static unsigned long lastrxchannel;
 
 void checkrx(void) {
+    if(rxmode != RXMODE_BIND && check_checksum()) {
+        __disable_irq();
+        decode_h7();
+        __enable_irq();
+    }
 }
 
-static void bindrx() {
+static uint8_t bindrx() {
     if (rxdata[0] == 0x20) {    // bind packet received
         rxaddress[0] = rxdata[4];
         rxaddress[1] = rxdata[5];
@@ -173,29 +171,23 @@ static void bindrx() {
         channeloffset = (((rxdata[7] & 0xf0) >> 4) + (rxdata[7] & 0x0f)) % 8;
         xn_command(FLUSH_RX);
         checksum_offset = rxdata[7];
+        return 1;
+    }
+    return 0;
+}
+
+uint8_t internal_rx() {
+    xn_readpayload(rxdata, PACKET_SIZE);
+    if (rxmode == RXMODE_BIND) {	// rx startup , bind mode
+        return bindrx();
+    } else {	// normal mode
+        return check_checksum();
     }
 }
 
-void internal_checkrx(void) {
+void change_channel()
+{
     unsigned long time = gettime();
-    LogDebug("pin:", GPIOA->IDR & GPIO_Pin_3);
-    LogDebug("PR:", EXTI->PR, " IMR:", EXTI->IMR, " R:", EXTI->RTSR);
-    LogDebug("t:", xn_getirqtime());
-
-    if (checkpacket()) {
-        xn_readpayload(rxdata, PACKET_SIZE);
-        lastrxtime = xn_getirqtime();
-        lastrxchannel = channel_idx;
-        if (rxmode == RXMODE_BIND) {	// rx startup , bind mode
-            bindrx();
-        } else {	// normal mode
-            if (decode_h7()) {
-                failsafe = 0;
-  //              LogDebug("t:", time, " l:", lastrxtime , " ch:", channel_idx);
-            }
-        }	// end normal rx mode
-	}	// end packet received
-
     unsigned long timediff = time - lastrxtime;
     unsigned long package = timediff / PACKET_PERIOD;
 
@@ -207,26 +199,28 @@ void internal_checkrx(void) {
         set_channel(package + lastrxchannel);
     }
 
-//    LogDebug("p: ", package, " c: ", channel_idx);
-
-
-/*	if (timediff > FAILSAFETIME) {	//  failsafe
-		failsafe = 1;
-		rx[0] = 0;
-		rx[1] = 0;
-		rx[2] = 0;
-		rx[3] = 0;
-	}*/
+    LogDebug("rx p: ", package, " c: ", channel_idx, " td: ", timediff);
 }
 
 
-
-void protocol_timer_irq()
+void protocol_timer_irq_handler()
 {
-//    LogDebug("timer irq: ", gettime());
-    internal_checkrx();
+    change_channel();
 }
 
+void xn_irq_handler(uint8_t status)
+{
+    uint8_t current_channel_idx = channel_idx;
+    if(status & (1<<RX_DR)) {
+        if(internal_rx()) {
+            protocol_timer_reset();
+            lastrxtime = xn_getirqtime();
+            lastrxchannel = current_channel_idx;
+            failsafe = 0;
+            change_channel();
+        }
+    }
+}
 
 
 // end H7 proto

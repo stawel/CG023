@@ -34,6 +34,9 @@ void EXTI2_3_IRQHandler(void)
     if ((EXTI->PR & XN297_IRQ_PIN) != 0) {
         EXTI->PR |= XN297_IRQ_PIN; // Clear the pending bit
         irqtime = gettime();
+        uint8_t status = xn_writereg(STATUS, (1<<RX_DR)+(1<<TX_DS));
+        xn_debug_irq_handler(status);
+        xn_irq_handler(status);
     }
 }
 
@@ -94,13 +97,14 @@ void xn_init()
     xn_debug_init();
 }
 
-void xn_writereg(uint8_t reg, uint8_t val) {
+uint8_t xn_writereg(uint8_t reg, uint8_t val) {
     reg = reg & 0x1F;
     reg = reg | 0x20;
     spi_cson();
-    spi_sendbyte(reg);
+    uint8_t status = spi_sendrecvbyte(reg);
     spi_sendbyte(val);
     spi_csoff();
+    return status;
 }
 
 uint8_t xn_readreg(uint8_t reg) {

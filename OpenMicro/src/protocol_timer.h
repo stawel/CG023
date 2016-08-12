@@ -7,6 +7,6 @@ void protocol_timer_init(uint16_t period_ms);
 void protocol_timer_reset();
 
 //user defined
-void protocol_timer_irq();
+void protocol_timer_irq_handler();
 
 #endif //PROTOCOL_TIMER_H

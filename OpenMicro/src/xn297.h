@@ -6,7 +6,7 @@
 void xn_init();
 void xn_writerxaddress(const uint8_t *addr);
 void xn_writetxaddress(const uint8_t *addr);
-void xn_writereg(uint8_t reg, uint8_t val);
+uint8_t xn_writereg(uint8_t reg, uint8_t val);
 uint8_t xn_command(uint8_t command);
 uint8_t xn_readreg(uint8_t reg);
 void xn_readpayload(uint8_t *data, uint8_t size);
@@ -18,6 +18,9 @@ uint8_t xn_getstatus();
 void xn_ceon();
 void xn_ceoff();
 uint32_t xn_getirqtime();
+
+//user defined
+void xn_irq_handler(uint8_t status);
 
 // registers
 #define CONFIG      0x00
@@ -96,4 +99,4 @@ uint32_t xn_getirqtime();
 #define REUSE_TX_PL   0xE3
 #define NOP           0xFF
 
-#endif
+#endif //XN297_H

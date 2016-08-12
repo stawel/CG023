@@ -9,7 +9,7 @@
 void TIM14_IRQHandler(void)
 {
     TIM14->SR &= ~(TIM_SR_CC1OF | TIM_SR_CC1IF);
-    protocol_timer_irq();
+    protocol_timer_irq_handler();
 }
 
 void protocol_timer_init(uint16_t period_ms) {
@@ -34,5 +34,6 @@ void protocol_timer_init(uint16_t period_ms) {
 
 void protocol_timer_reset()
 {
-
+    TIM_SetCounter(TIM14, 0);
+    TIM14->SR &= ~(TIM_SR_CC1OF | TIM_SR_CC1IF);
 }
