@@ -1,11 +1,18 @@
+#include <stdint.h>
 #include "binary.h"
 #include "drv_spi.h"
 
 #include "project.h"
 #include "xn297.h"
-#include "xn_debug.h"
 #include "drv_time.h"
+
 #include "stm32f0xx.h"
+#include "stm32f0xx_gpio.h"
+#include "stm32f0xx_rcc.h"
+#include "stm32f0xx_tim.h"
+
+#define ENABLE_DEBUG
+#include "xn_debug.h"
 
 #define XN297_CE_PIN    GPIO_Pin_0
 #define XN297_CE_PORT   GPIOB
@@ -25,17 +32,10 @@ static volatile uint32_t irqtime;
 void EXTI2_3_IRQHandler(void)
 {
     if ((EXTI->PR & XN297_IRQ_PIN) != 0) {
-        EXTI->PR |= XN297_IRQ_PIN; /* Clear the pending bit */
+        EXTI->PR |= XN297_IRQ_PIN; // Clear the pending bit
         irqtime = gettime();
     }
 }
-
-void TIM14_IRQHandler(void)
-{
-    TIM14->SR &= ~(TIM_SR_CC1OF | TIM_SR_CC1IF);
-    delay(1);
-}
-
 
 uint32_t xn_getirqtime()
 {
@@ -65,34 +65,12 @@ static void configure_ce_GPIO() {
 }
 
 static void configure_IRQ_GPIO() {
-    //SYSCFG->EXTICR[3] = SYSCFG_EXTICR1_EXTI3_PA;
     EXTI->IMR = XN297_IRQ_PIN;
     EXTI->FTSR = XN297_IRQ_PIN;
 
     NVIC_EnableIRQ(EXTI2_3_IRQn);
     NVIC_SetPriority(EXTI2_3_IRQn, 0);
 }
-
-static void configure_timer() {
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14 , ENABLE);
-
-    TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
-
-    TIM_TimeBaseInitStruct.TIM_Period = 0x6000;
-    TIM_TimeBaseInitStruct.TIM_Prescaler = 0x0048;
-    TIM_TimeBaseInitStruct.TIM_ClockDivision = TIM_CKD_DIV1;
-    TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0x0000;
-
-    TIM_TimeBaseInit(TIM14, &TIM_TimeBaseInitStruct);
-    TIM_ITConfig(TIM14, TIM_IT_CC1, ENABLE);
-
-    NVIC_EnableIRQ(TIM14_IRQn);
-    NVIC_SetPriority(TIM14_IRQn, 0);
-
-    TIM_Cmd(TIM14, ENABLE);
-}
-
 
 void xn_ceon() {
     XN297_CE_PORT->BSRR = XN297_CE_PIN;
@@ -107,7 +85,6 @@ void xn_init()
 {
     configure_ce_GPIO();
     configure_IRQ_GPIO();
-    configure_timer();
     xn_ceon();
 
     //writeregs(bbcal, sizeof(bbcal));
