@@ -1,8 +1,7 @@
 
 set(exec logger)
 
-set(${exec}_SRCS  main.cpp)
-#set(${exec}_HDRS  logger.h)
+set(${exec}_SRCS  main.cpp xn297.cpp)
 set(${exec}_PORT  /dev/ttyUSB0)
 set(${exec}_SERIAL picocom @SERIAL_PORT@ -b 115200 -l)
 
