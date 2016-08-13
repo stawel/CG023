@@ -20,31 +20,28 @@
 #define XN297_IRQ_PIN    GPIO_Pin_3
 #define XN297_IRQ_PORT   GPIOA
 
-
-
 static const uint8_t bbcal[6] = { 0x3f, 0x4c, 0x84, 0x6F, 0x9c, 0x20 };
-static const uint8_t rfcal[8] = {0x3e, 0xc9, 220, 0x80, 0x61, 0xbb, 0xab, 0x9c };
+static const uint8_t rfcal[8] =
+        { 0x3e, 0xc9, 220, 0x80, 0x61, 0xbb, 0xab, 0x9c };
 static const uint8_t demodcal[6] = { 0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03 };
 
 static volatile uint32_t irqtime;
 
-
-void EXTI2_3_IRQHandler(void)
-{
+void EXTI2_3_IRQHandler(void) {
     if ((EXTI->PR & XN297_IRQ_PIN) != 0) {
         EXTI->PR |= XN297_IRQ_PIN; // Clear the pending bit
+
         irqtime = gettime();
-        uint8_t status = xn_writereg(STATUS, (1<<RX_DR)+(1<<TX_DS));
+        uint8_t status = xn_writereg(STATUS, (1 << RX_DR) + (1 << TX_DS) + (1 << MAX_RT));
+
         xn_debug_irq_handler(status);
         xn_irq_handler(status);
     }
 }
 
-uint32_t xn_getirqtime()
-{
+uint32_t xn_getirqtime() {
     return irqtime;
 }
-
 
 void writeregs(const uint8_t data[], uint8_t size) {
 
@@ -83,14 +80,12 @@ void xn_ceoff() {
     XN297_CE_PORT->BRR = XN297_CE_PIN;
 }
 
-
-void xn_init()
-{
+void xn_init() {
     configure_ce_GPIO();
     configure_IRQ_GPIO();
     xn_ceon();
 
-    //writeregs(bbcal, sizeof(bbcal));
+    writeregs(bbcal, sizeof(bbcal));
     writeregs(rfcal, sizeof(rfcal));
     writeregs(demodcal, sizeof(demodcal));
 
@@ -134,7 +129,7 @@ void xn_readpayload(uint8_t *data, uint8_t size) {
     spi_csoff();
 }
 
-void xn_writedata(uint8_t reg,const uint8_t *addr, uint8_t size) {
+void xn_writedata(uint8_t reg, const uint8_t *addr, uint8_t size) {
     uint8_t index = 0;
     spi_cson();
     spi_sendbyte(reg | W_REGISTER);
@@ -162,12 +157,11 @@ void xn_setchannel(uint8_t channel) {
 #ifdef DEBUG_XN___
     xn_ceoff();
     xn_writereg(RF_CH, channel);
-    xn_writereg(CONFIG, (1<<PWR_UP) | (1<<CRCO)  | (1<<EN_CRC) | (1<<PRIM_RX)); // power up, crc enabled, PTX
+    xn_writereg(CONFIG, (1<<PWR_UP) | (1<<CRCO) | (1<<EN_CRC) | (1<<PRIM_RX)); // power up, crc enabled, PTX
     xn_ceon();
 #endif
 }
 
-uint8_t xn_getstatus()
-{
+uint8_t xn_getstatus() {
     return xn_command(0);
 }

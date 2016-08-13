@@ -8,11 +8,12 @@
 #include "xn_debug.h"
 
 #define XN_DEBUG_BUFFER     256
-#define XN_DEBUG_PACKAGE    (15+1)   //+1 - package_nr
+#define XN_DEBUG_PACKAGE        15
+#define XN_DEBUG_PAYLOAD_SIZE   (XN_DEBUG_PACKAGE+1)   //+1 - package_nr
 #define XN_DEBUG_CHANNEL    5
 #define XN_DEBUG_TIMELIMIT  1000
 
-static const uint8_t txaddress[5] = {0xcc, 0xcc, 0xcc, 0xcc, 0xcc};
+static const uint8_t txaddress[5] = { 0xcc, 0xcc, 0xcc, 0xcc, 0xcc };
 static uint8_t buf[XN_DEBUG_BUFFER];
 static uint32_t end;
 static uint32_t begin;
@@ -28,7 +29,7 @@ static int buf_size() {
 }
 
 static int space_left() {
-    if(buf_full) {
+    if (buf_full) {
         return 0;
     }
     return XN_DEBUG_BUFFER - buf_size();
@@ -44,15 +45,14 @@ static void inc_begin() {
     begin %= XN_DEBUG_BUFFER;
 }
 
-
 void xn_debug_print_ptr(char c, void * ptr, uint8_t size) {
-    if(space_left() < 6) {
+    if (space_left() < 6) {
         buf_full = 1;
     } else {
-        int32_t d = (int32_t)ptr;
-        uint8_t *d_ptr =(uint8_t *) &d;
+        int32_t d = (int32_t) ptr;
+        uint8_t *d_ptr = (uint8_t *) &d;
 
-        for(uint8_t i = 0; i < size;i++) {
+        for (uint8_t i = 0; i < size; i++) {
             buf[end] = c;
             inc_end();
             c = d_ptr[i];
@@ -60,9 +60,8 @@ void xn_debug_print_ptr(char c, void * ptr, uint8_t size) {
     }
 }
 
-void xn_debug_print_char(char c)
-{
-    if(space_left() < 2) {
+void xn_debug_print_char(char c) {
+    if (space_left() < 2) {
         buf_full = 1;
     } else {
         buf[end] = c;
@@ -70,40 +69,34 @@ void xn_debug_print_char(char c)
     }
 }
 
-
-void xn_debug_print(char c, void * ptr)
-{
-    if(c == 's') {
+void xn_debug_print(char c, void * ptr) {
+    if (c == 's') {
         char * s_ptr = ptr;
         uint32_t i = 0;
-        while(s_ptr[i]) {
+        while (s_ptr[i]) {
             xn_debug_print_char(s_ptr[i++]);
         }
     } else if (c == '8') {
-        xn_debug_print_ptr(c+128, ptr, 2);
+        xn_debug_print_ptr(c + 128, ptr, 2);
     } else {
-        xn_debug_print_ptr(c+128, ptr, 5);
+        xn_debug_print_ptr(c + 128, ptr, 5);
     }
 }
 
-
-void xn_debug_printnl()
-{
+void xn_debug_printnl() {
     xn_debug_print_char('\n');
 }
 
-
-void xn_debug_init()
-{
+void xn_debug_init() {
     begin = 0;
-    end  = 0;
+    end = 0;
     tx_active = 0;
     xn_writetxaddress(txaddress);
 }
 
 void xn_debug_writepayload() {
     static uint8_t package_nr = 0;
-    uint8_t index = 1;
+    uint8_t index = 0;
     spi_cson();
     spi_sendbyte(W_TX_PAYLOAD | W_REGISTER);
     spi_sendbyte(package_nr++);
@@ -115,13 +108,12 @@ void xn_debug_writepayload() {
     spi_csoff();
 }
 
-int xn_debug_send_data()
-{
-    if((xn_getstatus() & (1<<TX_FULL)) == 0) {
+int xn_debug_send_data() {
+    if ((xn_getstatus() & (1 << TX_FULL)) == 0) {
         xn_debug_writepayload();
-        if(buf_size() < XN_DEBUG_PACKAGE && buf_full) {
+        if (buf_size() < XN_DEBUG_PACKAGE && buf_full) {
             buf_full = 0;
-            xn_debug_print_char('F'+128);
+            xn_debug_print_char('F' + 128);
         }
         return 1;
     }
@@ -133,19 +125,20 @@ static void xn_debug_stop_transmission() {
     xn_writereg(RF_SETUP, fr_setup);
     tx_active = 0;
     xn_writereg(RF_CH, rxchannel);
-    xn_writereg(CONFIG, (1<<PWR_UP) | (1<<CRCO)  | (1<<EN_CRC) | (1<<PRIM_RX)); // power up, crc enabled, PTX
+    xn_writereg(CONFIG,
+            (1 << PWR_UP) | (1 << CRCO) | (1 << EN_CRC) | (1 << PRIM_RX)); // power up, crc enabled, PTX
     xn_ceon();
     stoptime = gettime();
     LogDebug(" t: ", stoptime - starttime);
 }
 
-void xn_debug_send_or_stop()
-{
-    if(tx_active) {
+void xn_debug_send_or_stop() {
+    if (tx_active) {
         unsigned long time = gettime();
-        if(time - starttime < XN_DEBUG_TIMELIMIT && buf_size() >= XN_DEBUG_PACKAGE) {
-                xn_debug_send_data();
-        } else if(xn_readreg(FIFO_STATUS) & (1<<TX_EMPTY)) {
+        if (time - starttime < XN_DEBUG_TIMELIMIT
+                && buf_size() >= XN_DEBUG_PACKAGE) {
+            xn_debug_send_data();
+        } else if (xn_readreg(FIFO_STATUS) & (1 << TX_EMPTY)) {
             xn_debug_stop_transmission();
         }
     }
@@ -157,11 +150,11 @@ static void xn_debug_start_transmission() {
     fr_setup = xn_readreg(RF_SETUP);
     LogDebug2("xn_debug s: ", starttime);
 
-    if(buf_size() >= XN_DEBUG_PACKAGE) {
+    if (buf_size() >= XN_DEBUG_PACKAGE) {
         xn_ceoff();
-        xn_writereg(STATUS, (1<<RX_DR) | (1<<TX_DS) | (1<<MAX_RT));
-        xn_writereg(CONFIG, (1<<PWR_UP)| (1<<CRCO)  | (1<<EN_CRC)); // power up, crc enabled, PTX
-        xn_writereg(RF_SETUP, (1<<RF_PWR) /*| (1<<RF_DR)*/);
+        xn_writereg(STATUS, (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT));
+        xn_writereg(CONFIG, (1 << PWR_UP) | (1 << CRCO) | (1 << EN_CRC)); // power up, crc enabled, PTX
+        xn_writereg(RF_SETUP, (1 << RF_PWR) /*| (1<<RF_DR)*/);
         xn_writereg(RF_CH, XN_DEBUG_CHANNEL);
         xn_debug_send_data();
         xn_ceon();
@@ -169,15 +162,15 @@ static void xn_debug_start_transmission() {
     xn_debug_send_or_stop();
 }
 
-void xn_debug_setchannel(uint8_t channel)
-{
+void xn_debug_setchannel(uint8_t channel) {
     rxchannel = channel;
-    if(!tx_active) {
+    if (!tx_active) {
         xn_debug_start_transmission();
     }
 }
 
-void xn_debug_irq_handler(uint8_t status)
-{
-    xn_debug_send_or_stop();
+void xn_debug_irq_handler(uint8_t status) {
+    if(status & (1 << TX_DS)) {
+        xn_debug_send_or_stop();
+    }
 }
