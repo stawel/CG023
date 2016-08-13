@@ -36,7 +36,7 @@
 
 #include "protocol_timer.h"
 
-#define ENABLE_DEBUG
+//#define ENABLE_DEBUG
 #include "xn_debug.h"
 
 #ifdef RX_H7_PROTOCOL
