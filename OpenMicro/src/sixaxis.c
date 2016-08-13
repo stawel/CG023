@@ -180,9 +180,7 @@ void sixaxis_read(void) {
 #endif
     }
 
-    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2]);
-    LogDebug("6NW: ", gyronew[0], " ", gyronew[1], " ", gyronew[2]);
-
+    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ",accel[2]);
 }
 
 void gyro_read(void) {
