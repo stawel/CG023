@@ -22,6 +22,8 @@
 //see ../arbitrary-baud/arbitrary-baud
 #define SERIAL_BAUDRATE                   (2000000)
 
+//send directly to serial
+#define FAST_FORWARD
 #define BINARY_OUTPUT
 //#define PRINT_PACKAGE_NR
 
@@ -36,6 +38,11 @@ int current_package_nr = 0;
 
 void dumpData(uint8_t* p, int len)
 {
+#ifdef FAST_FORWARD
+    Serial.write('P'+128);
+    Serial.write(p,len);
+#else
+
 #ifndef BINARY_OUTPUT
     while (len--) { printf("%02x", *p++); }
     Serial.println();
@@ -114,7 +121,9 @@ void dumpData(uint8_t* p, int len)
 //            Serial.print('|');
         }
     }
-#endif
+#endif //BINARY_OUTPUT
+
+#endif //FAST_FORWARD
 }
 
 void handleNrfIrq()

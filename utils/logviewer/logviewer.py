@@ -7,11 +7,17 @@ import numpy.linalg
 
 import sys
 import serial
+import struct
 
 #----------------------------------------------------
 
 port_name = '/dev/ttyUSB0'
 uart = serial.Serial(port_name,2000000,timeout=0.010)
+
+def parse_float(x):
+    temp = struct.pack("i", int(x))
+    return struct.unpack("f", temp)[0]
+
 
 def uart_parse():
     
@@ -21,9 +27,8 @@ def uart_parse():
         try:
             p = line.partition(" ")
             if p[0] == '6ax:':
-                v = [ float(x) for x in p[2].split() ]
+                v = [ parse_float(x) for x in p[2].split() ]
                 if len(v) == 6:
-#                    setVector(0,v[0..2])
                     g = array(v[0:3])
                     a = array(v[3:6])/2000.
                     print 'wynik:', v3d_length(g), v3d_length(a)
@@ -31,7 +36,7 @@ def uart_parse():
                     setVector(1,array([0,0,0]),a)
 
         except:
-            print "exception"
+            print "parse exception"
             pass
 #            raise
 
@@ -74,7 +79,6 @@ def v3d_sqrt(a):
 def update(num):
     #TODO
     uart_parse()
-    print 'zosia'
 
 
 anim = animation.FuncAnimation(fig1, update, 25, interval=100, blit=False)
