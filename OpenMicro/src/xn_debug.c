@@ -16,45 +16,50 @@
 
 static const uint8_t txaddress[5] = { 0xcc, 0xcc, 0xcc, 0xcc, 0xcc };
 static uint8_t buf[XN_DEBUG_BUFFER];
-static uint32_t end;
-static uint32_t begin;
 static uint8_t rxchannel;
 static uint8_t tx_active;
-static uint8_t buf_full;
 static uint8_t fr_setup;
 static unsigned long starttime;
 static unsigned long stoptime;
 static uint8_t packages_send;
 
+static volatile uint32_t i_end;
+static volatile uint32_t i_begin;
+static volatile uint8_t i_buf_full;
+
 static int buf_size() {
-    return (XN_DEBUG_BUFFER + end - begin) % XN_DEBUG_BUFFER;
+    return (XN_DEBUG_BUFFER + i_end - i_begin) % XN_DEBUG_BUFFER;
 }
 
-static int space_left() {
-    if (buf_full) {
-        return 0;
+static int ensure_free_space(uint8_t space) {
+    if(i_buf_full) return 0;
+
+    int retu = 1;
+    __disable_irq();
+    if(XN_DEBUG_BUFFER - buf_size() < space){
+        retu = 0;
+        i_buf_full = 1;
     }
-    return XN_DEBUG_BUFFER - buf_size();
+    __enable_irq();
+    return retu;
 }
 
 static void inc_end() {
-    end++;
-    end %= XN_DEBUG_BUFFER;
+    i_end++;
+    i_end %= XN_DEBUG_BUFFER;
 }
 
 static void inc_begin() {
-    begin++;
-    begin %= XN_DEBUG_BUFFER;
+    i_begin++;
+    i_begin %= XN_DEBUG_BUFFER;
 }
 
 void xn_debug_print_data(char c, uint32_t d, uint8_t size) {
-    if (space_left() < 6) {
-        buf_full = 1;
-    } else {
+    if (ensure_free_space(6)) {
         uint8_t *d_ptr = (uint8_t *) &d;
         c += 128;
         for (uint8_t i = 0; i < size; i++) {
-            buf[end] = c;
+            buf[i_end] = c;
             inc_end();
             c = d_ptr[i];
         }
@@ -64,10 +69,8 @@ void xn_debug_print_data(char c, uint32_t d, uint8_t size) {
 //#define typechar(x) _Generic((x), float: 'f', int: 'i', unsigned long: 'i', char *: 's', uint8_t: '8')
 
 void xn_debug_print_char(char c) {
-    if (space_left() < 2) {
-        buf_full = 1;
-    } else {
-        buf[end] = c;
+    if (ensure_free_space(2)) {
+        buf[i_end] = c;
         inc_end();
     }
 }
@@ -95,8 +98,8 @@ void xn_debug_printnl() {
 }
 
 void xn_debug_init() {
-    begin = 0;
-    end = 0;
+    i_begin = 0;
+    i_end = 0;
     tx_active = 0;
     xn_writetxaddress(txaddress);
 }
@@ -108,7 +111,7 @@ void xn_debug_writepayload() {
     spi_sendbyte(W_TX_PAYLOAD | W_REGISTER);
     spi_sendbyte(package_nr++);
     while (index < XN_DEBUG_PACKAGE) {
-        spi_sendbyte(buf[begin]);
+        spi_sendbyte(buf[i_begin]);
         inc_begin();
         index++;
     }
@@ -119,8 +122,8 @@ void xn_debug_writepayload() {
 int xn_debug_send_data() {
     if ((xn_getstatus() & (1 << TX_FULL)) == 0) {
         xn_debug_writepayload();
-        if (buf_size() < XN_DEBUG_PACKAGE && buf_full) {
-            buf_full = 0;
+        if (buf_size() < XN_DEBUG_PACKAGE && i_buf_full) {
+            i_buf_full = 0;
             xn_debug_print_char('F' + 128);
         }
         return 1;
