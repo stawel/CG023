@@ -47,13 +47,12 @@ static void inc_begin() {
     begin %= XN_DEBUG_BUFFER;
 }
 
-void xn_debug_print_ptr(char c, void * ptr, uint8_t size) {
+void xn_debug_print_data(char c, uint32_t d, uint8_t size) {
     if (space_left() < 6) {
         buf_full = 1;
     } else {
-        int32_t d = (int32_t) ptr;
         uint8_t *d_ptr = (uint8_t *) &d;
-
+        c += 128;
         for (uint8_t i = 0; i < size; i++) {
             buf[end] = c;
             inc_end();
@@ -61,6 +60,8 @@ void xn_debug_print_ptr(char c, void * ptr, uint8_t size) {
         }
     }
 }
+
+//#define typechar(x) _Generic((x), float: 'f', int: 'i', unsigned long: 'i', char *: 's', uint8_t: '8')
 
 void xn_debug_print_char(char c) {
     if (space_left() < 2) {
@@ -71,18 +72,22 @@ void xn_debug_print_char(char c) {
     }
 }
 
-void xn_debug_print(char c, void * ptr) {
-    if (c == 's') {
-        char * s_ptr = ptr;
-        uint32_t i = 0;
-        while (s_ptr[i]) {
-            xn_debug_print_char(s_ptr[i++]);
-        }
-    } else if (c == '8') {
-        xn_debug_print_ptr(c + 128, ptr, 2);
-    } else {
-        xn_debug_print_ptr(c + 128, ptr, 5);
+void xn_debug_print_string(char * ptr) {
+    uint32_t i = 0;
+    while (ptr[i]) {
+        xn_debug_print_char(ptr[i++]);
     }
+}
+void xn_debug_print_long(long x) {
+    xn_debug_print_data('i', x, 5);
+}
+void xn_debug_print_u8(uint8_t x) {
+    xn_debug_print_data('8', x, 2);
+}
+
+void xn_debug_print_float(float x) {
+    uint32_t *ptr = (uint32_t *)&x;
+    xn_debug_print_data('f', *ptr, 5);
 }
 
 void xn_debug_printnl() {

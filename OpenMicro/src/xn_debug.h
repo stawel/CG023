@@ -6,32 +6,34 @@
 void xn_debug_init();
 void xn_debug_setchannel(uint8_t channel);
 
-void xn_debug_print(char c, void * ptr);
+void xn_debug_print_string(char * ptr);
+void xn_debug_print_long(long x);
+void xn_debug_print_u8(uint8_t x);
+void xn_debug_print_float(float x);
 void xn_debug_printnl();
 
 void xn_debug_irq_handler(uint8_t status);
 
 #ifdef ENABLE_DEBUG
 
-#define typechar(x) _Generic((x), int: 'i', unsigned long: 'i', char *: 's', uint8_t: '8')
-#define typecast(x) ((void*)((int)x))
+#define xn_debug_print(x) _Generic((x), unsigned long: xn_debug_print_long, char *: xn_debug_print_string, uint8_t: xn_debug_print_u8, float: xn_debug_print_float) (x)
 
 #define LogDebug_();
-#define LogDebug_1(x, args...) xn_debug_print(typechar(x),typecast(x));
-#define LogDebug_2(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_1(args);
-#define LogDebug_3(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_2(args);
-#define LogDebug_4(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_3(args);
-#define LogDebug_5(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_4(args);
-#define LogDebug_6(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_5(args);
-#define LogDebug_7(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_6(args);
-#define LogDebug_8(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_7(args);
-#define LogDebug_9(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_8(args);
-#define LogDebug_10(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_9(args);
-#define LogDebug_11(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_10(args);
-#define LogDebug_12(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_11(args);
-#define LogDebug_13(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_12(args);
-#define LogDebug_14(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_13(args);
-#define LogDebug_15(x, args...) xn_debug_print(typechar(x),typecast(x)); LogDebug_14(args);
+#define LogDebug_1(x, args...) xn_debug_print(x);
+#define LogDebug_2(x, args...) xn_debug_print(x); LogDebug_1(args);
+#define LogDebug_3(x, args...) xn_debug_print(x); LogDebug_2(args);
+#define LogDebug_4(x, args...) xn_debug_print(x); LogDebug_3(args);
+#define LogDebug_5(x, args...) xn_debug_print(x); LogDebug_4(args);
+#define LogDebug_6(x, args...) xn_debug_print(x); LogDebug_5(args);
+#define LogDebug_7(x, args...) xn_debug_print(x); LogDebug_6(args);
+#define LogDebug_8(x, args...) xn_debug_print(x); LogDebug_7(args);
+#define LogDebug_9(x, args...) xn_debug_print(x); LogDebug_8(args);
+#define LogDebug_10(x, args...) xn_debug_print(x); LogDebug_9(args);
+#define LogDebug_11(x, args...) xn_debug_print(x); LogDebug_10(args);
+#define LogDebug_12(x, args...) xn_debug_print(x); LogDebug_11(args);
+#define LogDebug_13(x, args...) xn_debug_print(x); LogDebug_12(args);
+#define LogDebug_14(x, args...) xn_debug_print(x); LogDebug_13(args);
+#define LogDebug_15(x, args...) xn_debug_print(x); LogDebug_14(args);
 
 
 #define _NUM_ARGS2(X,X64,X63,X62,X61,X60,X59,X58,X57,X56,X55,X54,X53,X52,X51,X50,X49,X48,X47,X46,X45,X44,X43,X42,X41,X40,X39,X38,X37,X36,X35,X34,X33,X32,X31,X30,X29,X28,X27,X26,X25,X24,X23,X22,X21,X20,X19,X18,X17,X16,X15,X14,X13,X12,X11,X10,X9,X8,X7,X6,X5,X4,X3,X2,X1,N,...) N

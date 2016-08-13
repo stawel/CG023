@@ -38,6 +38,10 @@
 
 #include <math.h>
 
+#define ENABLE_DEBUG
+#include "xn_debug.h"
+
+
 // for soft gyro filter
 extern float lpffilter(float in, int num);
 
@@ -176,6 +180,9 @@ void sixaxis_read(void) {
 #endif
     }
 
+    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2]);
+    LogDebug("6NW: ", gyronew[0], " ", gyronew[1], " ", gyronew[2]);
+
 }
 
 void gyro_read(void) {
@@ -228,7 +235,6 @@ void gyro_read(void) {
         gyro[i] = gyronew[i];
 #endif
     }
-
 }
 
 #define CAL_TIME 2e6
