@@ -8,7 +8,7 @@
 #include "xn_debug.h"
 
 #define XN_DEBUG_BUFFER     256
-#define XN_DEBUG_PACKAGE    (16+1)   //+1 - package_nr
+#define XN_DEBUG_PACKAGE    (15+1)   //+1 - package_nr
 #define XN_DEBUG_CHANNEL    5
 #define XN_DEBUG_TIMELIMIT  1000
 

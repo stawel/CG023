@@ -12,7 +12,7 @@
 
 
 //radio config
-#define RF_PAYLOAD_SIZE             16+1   //+1 - package_nr
+#define RF_PAYLOAD_SIZE             15+1   //+1 - package_nr
 #define RF_CHANNEL                  5
 #define RF_ADDR_WIDTH               5
 #define RADIO_ID                    {0xcc, 0xcc, 0xcc, 0xcc, 0xcc}
@@ -100,7 +100,7 @@ void dumpData(uint8_t* p, int len)
             chars+=1;
         } else if (c == 'F') {
             Serial.println();
-            Serial.println("[BUFFER FULL]");
+            Serial.println("[COPTER BUFFER FULL]");
         }
     } else if (oldbuf[pos] == '\n') {
         Serial.println();
