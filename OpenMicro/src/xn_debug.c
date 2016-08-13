@@ -11,7 +11,8 @@
 #define XN_DEBUG_PACKAGE        15
 #define XN_DEBUG_PAYLOAD_SIZE   (XN_DEBUG_PACKAGE+1)   //+1 - package_nr
 #define XN_DEBUG_CHANNEL    5
-#define XN_DEBUG_TIMELIMIT  1000
+//TODO: fix timelimit
+#define XN_DEBUG_TIMELIMIT  500
 
 static const uint8_t txaddress[5] = { 0xcc, 0xcc, 0xcc, 0xcc, 0xcc };
 static uint8_t buf[XN_DEBUG_BUFFER];
@@ -23,6 +24,7 @@ static uint8_t buf_full;
 static uint8_t fr_setup;
 static unsigned long starttime;
 static unsigned long stoptime;
+static uint8_t packages_send;
 
 static int buf_size() {
     return (XN_DEBUG_BUFFER + end - begin) % XN_DEBUG_BUFFER;
@@ -106,6 +108,7 @@ void xn_debug_writepayload() {
         index++;
     }
     spi_csoff();
+    packages_send++;
 }
 
 int xn_debug_send_data() {
@@ -129,7 +132,8 @@ static void xn_debug_stop_transmission() {
             (1 << PWR_UP) | (1 << CRCO) | (1 << EN_CRC) | (1 << PRIM_RX)); // power up, crc enabled, PTX
     xn_ceon();
     stoptime = gettime();
-    LogDebug(" t: ", stoptime - starttime);
+
+    LogDebug("xn_debug s: ", starttime, " p: ", packages_send, " t: ", stoptime - starttime);
 }
 
 void xn_debug_send_or_stop() {
@@ -146,9 +150,9 @@ void xn_debug_send_or_stop() {
 
 static void xn_debug_start_transmission() {
     tx_active = 1;
+    packages_send = 0;
     starttime = gettime();
     fr_setup = xn_readreg(RF_SETUP);
-    LogDebug2("xn_debug s: ", starttime);
 
     if (buf_size() >= XN_DEBUG_PACKAGE) {
         xn_ceoff();
