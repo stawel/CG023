@@ -8,7 +8,7 @@
 #include "xn_debug.h"
 
 #define XN_DEBUG_BUFFER     256
-#define XN_DEBUG_PACKAGE    16
+#define XN_DEBUG_PACKAGE    (16+1)   //+1 - package_nr
 #define XN_DEBUG_CHANNEL    5
 #define XN_DEBUG_TIMELIMIT  1000
 
@@ -102,9 +102,11 @@ void xn_debug_init()
 }
 
 void xn_debug_writepayload() {
-    uint8_t index = 0;
+    static uint8_t package_nr = 0;
+    uint8_t index = 1;
     spi_cson();
     spi_sendbyte(W_TX_PAYLOAD | W_REGISTER);
+    spi_sendbyte(package_nr++);
     while (index < XN_DEBUG_PACKAGE) {
         spi_sendbyte(buf[begin]);
         inc_begin();

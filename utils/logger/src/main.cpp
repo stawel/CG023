@@ -12,7 +12,7 @@
 
 
 //radio config
-#define RF_PAYLOAD_SIZE             16
+#define RF_PAYLOAD_SIZE             16+1   //+1 - package_nr
 #define RF_CHANNEL                  5
 #define RF_ADDR_WIDTH               5
 #define RADIO_ID                    {0xcc, 0xcc, 0xcc, 0xcc, 0xcc}
@@ -23,6 +23,7 @@
 #define SERIAL_BAUDRATE                   (2000000)
 
 #define BINARY_OUTPUT
+//#define PRINT_PACKAGE_NR
 
 // Set up nRF24L01 radio on SPI bus plus CE/CS pins
 static RF24 radio(RF_CE_PIN, RF_CS_PIN);
@@ -31,6 +32,7 @@ uint8_t oldbuf[256];
 int pos = 0;
 int size = 0;
 int chars = 0;
+int current_package_nr = 0;
 
 void dumpData(uint8_t* p, int len)
 {
@@ -39,8 +41,6 @@ void dumpData(uint8_t* p, int len)
     Serial.println();
 #else
 
-//    for(int i=0;i<len;i++) { printf("%02x", p[i]); }
-//    Serial.println( );
 
     size -= pos;
     for(int i = 0; i<size;i++) {
@@ -48,7 +48,24 @@ void dumpData(uint8_t* p, int len)
     }
     pos = 0;
 
-    for(int i = 0; i<len;i++) {
+    uint8_t package_nr = p[0];
+    if((package_nr - current_package_nr + 256) % 256 != 1) {
+        Serial.println();
+        Serial.print("[PACKAGE LOST, last: ");
+        Serial.print(current_package_nr);
+        Serial.print(" new: ");
+        Serial.print(package_nr);
+        Serial.println(" ]");
+    }
+    current_package_nr = package_nr;
+
+#ifdef PRINT_PACKAGE_NR
+    Serial.print('[');
+    Serial.print(package_nr);
+    Serial.print(']');
+#endif
+
+    for(int i = 1; i<len;i++) {
         oldbuf[size++]=p[i];
     }
 
@@ -94,7 +111,7 @@ void dumpData(uint8_t* p, int len)
     chars++;
         if(chars >= RF_PAYLOAD_SIZE) {
             chars -= RF_PAYLOAD_SIZE;
-  //          Serial.print('|');
+//            Serial.print('|');
         }
     }
 #endif
