@@ -18,10 +18,11 @@
 #define RADIO_ID                    {0xcc, 0xcc, 0xcc, 0xcc, 0xcc}
 
 
-#define SERIAL_BAUDRATE                   (115200)
+//#define SERIAL_BAUDRATE                   (115200)
+//see ../arbitrary-baud/arbitrary-baud
+#define SERIAL_BAUDRATE                   (2000000)
+
 #define BINARY_OUTPUT
-
-
 
 // Set up nRF24L01 radio on SPI bus plus CE/CS pins
 static RF24 radio(RF_CE_PIN, RF_CS_PIN);
@@ -29,61 +30,73 @@ static RF24 radio(RF_CE_PIN, RF_CS_PIN);
 uint8_t oldbuf[256];
 int pos = 0;
 int size = 0;
+int chars = 0;
 
 void dumpData(uint8_t* p, int len)
 {
 #ifndef BINARY_OUTPUT
-  while (len--) { printf("%02x", *p++); }
-  Serial.print(' ');
+    while (len--) { printf("%02x", *p++); }
+    Serial.println();
 #else
 
-  size -= pos;
-  for(int i = 0; i<size;i++) {
-    oldbuf[i]=oldbuf[i+pos];
-  }
-  pos = 0;
+//    for(int i=0;i<len;i++) { printf("%02x", p[i]); }
+//    Serial.println( );
 
-  for(int i = 0; i<len;i++) {
-    oldbuf[size++]=p[i];
-  }
+    size -= pos;
+    for(int i = 0; i<size;i++) {
+        oldbuf[i]=oldbuf[i+pos];
+    }
+    pos = 0;
+
+    for(int i = 0; i<len;i++) {
+        oldbuf[size++]=p[i];
+    }
 
 
-  for(;pos<size;pos++) {
+    for(;pos<size;pos++) {
     if(oldbuf[pos] > 128) {
-      if(size-pos < 5) break;
-      char c = oldbuf[pos]-128;
-      if(c == 'i') {
-        int32_t data;
-        uint8_t * d_ptr = (uint8_t *)&data;
-        pos++;
-        d_ptr[0]=oldbuf[pos++];
-        d_ptr[1]=oldbuf[pos++];
-        d_ptr[2]=oldbuf[pos++];
-        d_ptr[3]=oldbuf[pos];
-        Serial.print(data);
-      } else if (c == 'f') {
-        float data;
-        uint8_t * d_ptr = (uint8_t *)&data;
-        pos++;
-        d_ptr[0]=oldbuf[pos++];
-        d_ptr[1]=oldbuf[pos++];
-        d_ptr[2]=oldbuf[pos++];
-        d_ptr[3]=oldbuf[pos];
-        Serial.print(data);
-      } else if (c == '8') {
-        pos++;
-        Serial.print(((uint8_t)oldbuf[pos]));
-      } else if (c == 'F') {
-        Serial.println();
-        Serial.println("[BUFFER FULL]");
-      }
+        if(size-pos < 5) break;
+        char c = oldbuf[pos]-128;
+        if(c == 'i') {
+            int32_t data;
+            uint8_t * d_ptr = (uint8_t *)&data;
+            pos++;
+            d_ptr[0]=oldbuf[pos++];
+            d_ptr[1]=oldbuf[pos++];
+            d_ptr[2]=oldbuf[pos++];
+            d_ptr[3]=oldbuf[pos];
+            Serial.print(data);
+            chars+=4;
+        } else if (c == 'f') {
+            float data;
+            uint8_t * d_ptr = (uint8_t *)&data;
+            pos++;
+            d_ptr[0]=oldbuf[pos++];
+            d_ptr[1]=oldbuf[pos++];
+            d_ptr[2]=oldbuf[pos++];
+            d_ptr[3]=oldbuf[pos];
+            Serial.print(data);
+            chars+=4;
+        } else if (c == '8') {
+            pos++;
+            Serial.print(((uint8_t)oldbuf[pos]));
+            chars+=1;
+        } else if (c == 'F') {
+            Serial.println();
+            Serial.println("[BUFFER FULL]");
+        }
     } else if (oldbuf[pos] == '\n') {
         Serial.println();
     } else {
-      if(oldbuf[pos] != 0)
-        Serial.write(oldbuf[pos]);
+        if(oldbuf[pos] != 0)
+            Serial.write(oldbuf[pos]);
     }
-  }
+    chars++;
+        if(chars >= RF_PAYLOAD_SIZE) {
+            chars -= RF_PAYLOAD_SIZE;
+  //          Serial.print('|');
+        }
+    }
 #endif
 }
 
@@ -131,10 +144,16 @@ void setupRadio(void)
 }
 
 
+int my_putc( char c, FILE *t ){
+  Serial.write(c);
+}
+
 void setup(void)
 {
     Serial.begin(SERIAL_BAUDRATE);
     Serial.println("-- start --");
+    //printf
+    fdevopen( &my_putc, 0);
 
     setupRadio();
 }
