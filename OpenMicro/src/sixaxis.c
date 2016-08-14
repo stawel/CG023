@@ -41,7 +41,6 @@
 #define ENABLE_DEBUG
 #include "xn_debug.h"
 
-
 // for soft gyro filter
 extern float lpffilter(float in, int num);
 
@@ -319,7 +318,7 @@ void acc_cal(void) {
         for (int x = 0; x < 3; x++) {
             lpf(&accelcal[x], accel[x], 0.92);
         }
-        gettime();// if it takes too long time will overflow so we call it here
+        gettime(); // if it takes too long time will overflow so we call it here
 
     }
     accelcal[2] -= 2048;

@@ -3,17 +3,15 @@
 #include "stm32f0xx_rcc.h"
 #include "stm32f0xx_tim.h"
 
-
 #define CPU_F_MHZ 48
 
-void TIM14_IRQHandler(void)
-{
+void TIM14_IRQHandler(void) {
     TIM14->SR &= ~(TIM_SR_CC1OF | TIM_SR_CC1IF);
     protocol_timer_irq_handler();
 }
 
 void protocol_timer_init(uint16_t period_ms) {
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14 , ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14, ENABLE);
 
     TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
 
@@ -32,8 +30,7 @@ void protocol_timer_init(uint16_t period_ms) {
     TIM_Cmd(TIM14, ENABLE);
 }
 
-void protocol_timer_reset()
-{
+void protocol_timer_reset() {
     TIM_SetCounter(TIM14, 0);
     TIM14->SR &= ~(TIM_SR_CC1OF | TIM_SR_CC1IF);
 }

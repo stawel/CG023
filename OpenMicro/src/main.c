@@ -309,8 +309,6 @@ int main(void) {
         check_battery();
         set_leds();
 
-
-
 // the delay is required or it becomes endless loop ( truncation in time routine)
         do {
             delay(1);

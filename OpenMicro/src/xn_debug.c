@@ -32,11 +32,12 @@ static int buf_size() {
 }
 
 static int ensure_free_space(uint8_t space) {
-    if(i_buf_full) return 0;
+    if (i_buf_full)
+        return 0;
 
     int retu = 1;
     __disable_irq();
-    if(XN_DEBUG_BUFFER - buf_size() < space){
+    if (XN_DEBUG_BUFFER - buf_size() < space) {
         retu = 0;
         i_buf_full = 1;
     }
@@ -89,7 +90,7 @@ void xn_debug_print_u8(uint8_t x) {
 }
 
 void xn_debug_print_float(float x) {
-    uint32_t *ptr = (uint32_t *)&x;
+    uint32_t *ptr = (uint32_t *) &x;
     xn_debug_print_data('f', *ptr, 5);
 }
 
@@ -182,7 +183,7 @@ void xn_debug_setchannel(uint8_t channel) {
 }
 
 void xn_debug_irq_handler(uint8_t status) {
-    if(status & (1 << TX_DS)) {
+    if (status & (1 << TX_DS)) {
         xn_debug_send_or_stop();
     }
 }
