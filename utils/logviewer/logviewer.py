@@ -8,26 +8,19 @@ import numpy.linalg
 import sys
 import serial
 import struct
-
+import uartparser
 #----------------------------------------------------
-
-port_name = '/dev/ttyUSB0'
-uart = serial.Serial(port_name,2000000,timeout=0.010)
-
-def parse_float(x):
-    temp = struct.pack("i", int(x))
-    return struct.unpack("f", temp)[0]
 
 
 def uart_parse():
-    
-    while uart.inWaiting() > 10:
-        line = uart.readline()
-        print line,
+    uartparser.uart_parse_stream();
+    while len(uartparser.line_buffer) > 0:
+        line = uartparser.line_buffer.popleft()
+        print line
         try:
             p = line.partition(" ")
             if p[0] == '6ax:':
-                v = [ parse_float(x) for x in p[2].split() ]
+                v = [ float(x) for x in p[2].split() ]
                 if len(v) == 6:
                     g = array(v[0:3])
                     a = array(v[3:6])/2000.
@@ -39,9 +32,6 @@ def uart_parse():
             print "parse exception"
             pass
 #            raise
-
-
-
 
 
 #------------------------------------------------------
