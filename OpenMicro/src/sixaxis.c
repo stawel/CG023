@@ -92,6 +92,9 @@ float gyrocal[3];
 //TODO: do a #define
 float sensor_rotation[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
+//TODO: remove hotfix (rotation 90 degree)
+float hotfix_rotation[4] = { 0.707106781186547524f, 0.0f, 0.0f, 0.707106781186547524f };
+
 float lpffilter(float in, int num);
 
 void sixaxis_read(void) {
@@ -103,13 +106,14 @@ void sixaxis_read(void) {
 
     v3d_set(gyro, &data[8]);
     //TODO: *-1.0f ??
-    v3d_mulf(gyro, 1.0f);
+    v3d_mulf(gyro, -1.0f);
     v3d_rotate(gyro, sensor_rotation);
+    v3d_rotate(gyro, hotfix_rotation);
 
     v3d_add(gyro, gyrocal);
     v3d_mulf(gyro, 0.061035156f * 0.017453292f);
 
-    //LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
+//    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
 }
 
 #define CAL_TIME 2000*1000
@@ -172,4 +176,3 @@ void sixaxis_cal() {
     LogDebug("6cb: ", count , " ", gyrocal[0], " ", gyrocal[1], " ", gyrocal[2], "\t",
             accelcal[0], " ", accelcal[1], " ", accelcal[2]);
 }
-
