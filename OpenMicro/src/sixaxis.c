@@ -90,10 +90,10 @@ float accelcal[3];
 float gyrocal[3];
 
 //TODO: do a #define
-float sensor_rotation[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+float sensor_rotation_quaternion[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 //TODO: remove hotfix (rotation 90 degree)
-float hotfix_rotation[4] = { 0.707106781186547524f, 0.0f, 0.0f, 0.707106781186547524f };
+float hotfix_rotation_quaternion[4] = { 0.707106781186547524f, 0.0f, 0.0f, 0.707106781186547524f };
 
 float lpffilter(float in, int num);
 
@@ -102,41 +102,42 @@ void sixaxis_read(void) {
     softi2c_readdata( SOFTI2C_GYRO_ADDRESS, 59, data, 14);
 
     v3d_set(accel, &data[0]);
-    v3d_rotate(accel, sensor_rotation);
+    v3d_rotate(accel, sensor_rotation_quaternion);
 
     v3d_set(gyro, &data[8]);
     //TODO: *-1.0f ??
     v3d_mulf(gyro, -1.0f);
-    v3d_rotate(gyro, sensor_rotation);
-    v3d_rotate(gyro, hotfix_rotation);
+    v3d_rotate(gyro, sensor_rotation_quaternion);
+    v3d_rotate(gyro, hotfix_rotation_quaternion);
 
-    v3d_add(gyro, gyrocal);
     v3d_mulf(gyro, 0.061035156f * 0.017453292f);
+    v3d_sub(gyro, gyrocal);
 
-//    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
+    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
 }
 
 #define CAL_TIME 2000*1000
 //TODO: set errors
-#define ACCELCAL_ERROR  10.0f
-#define GYROCAL_ERROR   10.0f
+#define ACCELCAL_ERROR  30.0f
+#define GYROCAL_ERROR   0.005f
 
-void sixaxis_cal() {
+static int try_sixaxis_cal() {
+
     unsigned long start_time = gettime();
-    unsigned long time;
-    unsigned long count = 0;
+    unsigned long time, count = 0;
 
-    float new_gyrocal[3];
-    float new_accelcal[3];
-
-    float sum_gyrocal[3];
-    float sum_accelcal[3];
+    float new_gyrocal[3], new_accelcal[3];
+    float sum_gyrocal[3], sum_accelcal[3];
 
     v3d_zero(sum_gyrocal);
-    v3d_zero(sum_gyrocal);
+    v3d_zero(sum_accelcal);
+    v3d_zero(gyrocal);
+
+    sixaxis_read();
 
     do {
-        time = gettime();
+
+        delay_us(1000);
         v3d_copy(new_gyrocal, gyro);
         v3d_copy(new_accelcal, accel);
 
@@ -145,10 +146,12 @@ void sixaxis_cal() {
         v3d_sub(new_gyrocal, gyro);
         v3d_sub(new_accelcal, accel);
 
-        if (v3d_magnitude(new_gyrocal) > GYROCAL_ERROR
-                || v3d_magnitude(new_accelcal) > ACCELCAL_ERROR) {
-            LogDebug("Calibration interrupted!");
-            return;
+        float gy_error = v3d_magnitude(new_gyrocal);
+        float ac_error = v3d_magnitude(new_accelcal);
+
+        if (gy_error > GYROCAL_ERROR || ac_error > ACCELCAL_ERROR) {
+            LogDebug("Calibration interrupted! ", gy_error, " ", ac_error);
+            return 0;
         }
 
         v3d_add(sum_gyrocal, gyro);
@@ -163,16 +166,27 @@ void sixaxis_cal() {
             ledoff(B00000101);
         }
 
-        delay(1000);
-
-    } while (time - start_time < CAL_TIME);
+    } while (gettime() - start_time < CAL_TIME);
 
     float m = 1.0f/count;
+
     v3d_mulf(sum_gyrocal, m);
     v3d_mulf(sum_accelcal, m);
 
     v3d_copy(accelcal, sum_accelcal);
-    v3d_sub(gyrocal, sum_gyrocal);
+    v3d_add(gyrocal, sum_gyrocal);
     LogDebug("6cb: ", count , " ", gyrocal[0], " ", gyrocal[1], " ", gyrocal[2], "\t",
             accelcal[0], " ", accelcal[1], " ", accelcal[2]);
+    return 1;
+
+}
+
+void sixaxis_cal() {
+    unsigned long start_time = gettime();
+
+    do {
+        if(try_sixaxis_cal())
+            return;
+    } while (gettime() - start_time < 15*1000*1000 );
+
 }

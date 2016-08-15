@@ -80,9 +80,9 @@ def parse_raw_stream():
 def uart_parse_stream():
     r = uart.read(uart.inWaiting())
     raw_stream.extend(r);
-    while len(raw_stream) > package_len:
+    while len(raw_stream) >= package_len:
         parse_raw_stream()
-        while len(raw_buffer) > 5:
+        while len(raw_buffer) >= 5:
             parse_raw_buffer();
 
 

@@ -64,6 +64,11 @@ void delay(uint32_t data) {
         ;
 }
 
+void delay_us(uint32_t usec) {
+    uint32_t time = gettime();
+    while (time + usec < gettime());
+}
+
 void SysTick_Handler(void) {
 
 }

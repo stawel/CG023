@@ -242,6 +242,7 @@ int main(void) {
     if ( vbattfilt < (float) STOP_LOWBATTERY_TRESH) failloop(2);
 #endif
 
+    sixaxis_cal();
 #ifndef ACRO_ONLY
     imu_init();
 
