@@ -40,7 +40,6 @@
 #define ENABLE_DEBUG
 #include "xn_debug.h"
 
-
 #include "debug.h"
 extern debug_type debug;
 
@@ -104,48 +103,55 @@ void sixaxis_read(void) {
 
     v3d_set(gyro, &data[8]);
     //TODO: *-1.0f ??
-    v3d_mulf(gyro, -1.0f);
+    v3d_mulf(gyro, 1.0f);
     v3d_rotate(gyro, sensor_rotation);
 
     v3d_add(gyro, gyrocal);
     v3d_mulf(gyro, 0.061035156f * 0.017453292f);
 
-    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
-    LogDebug("6cb: ", gyrocal[0], " ", gyrocal[1], " ", gyrocal[2], "\t", accelcal[0], " ", accelcal[1], " ", accelcal[2]);
+    //LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
 }
 
-#define CAL_TIME 2e6
+#define CAL_TIME 2000*1000
+//TODO: set errors
+#define ACCELCAL_ERROR  10.0f
+#define GYROCAL_ERROR   10.0f
 
-void gyro_cal(void) {
-/*    uint8_t data[6];
-    float limit[3];
-    unsigned long time = gettime();
-    unsigned long timestart = time;
-    unsigned long timemax = time;
-    unsigned long lastlooptime = time;
+void sixaxis_cal() {
+    unsigned long start_time = gettime();
+    unsigned long time;
+    unsigned long count = 0;
 
-    float gyro[3];
+    float new_gyrocal[3];
+    float new_accelcal[3];
 
-    for (int i = 0; i < 3; i++) {
-        limit[i] = gyrocal[i];
-    }
+    float sum_gyrocal[3];
+    float sum_accelcal[3];
 
-// 2 and 15 seconds
-    while (time - timestart < CAL_TIME && time - timemax < 15e6) {
+    v3d_zero(sum_gyrocal);
+    v3d_zero(sum_gyrocal);
 
-        unsigned long looptime;
-        looptime = time - lastlooptime;
-        lastlooptime = time;
-        if (looptime == 0)
-            looptime = 1;
+    do {
+        time = gettime();
+        v3d_copy(new_gyrocal, gyro);
+        v3d_copy(new_accelcal, accel);
 
-        softi2c_readdata(0x68, 67, data, 6);
+        sixaxis_read();
 
-        gyro[1] = (int16_t) ((data[0] << 8) + data[1]);
-        gyro[0] = (int16_t) ((data[2] << 8) + data[3]);
-        gyro[2] = (int16_t) ((data[4] << 8) + data[5]);
+        v3d_sub(new_gyrocal, gyro);
+        v3d_sub(new_accelcal, accel);
 
-        if ((time - timestart) % 200000 > 100000) {
+        if (v3d_magnitude(new_gyrocal) > GYROCAL_ERROR
+                || v3d_magnitude(new_accelcal) > ACCELCAL_ERROR) {
+            LogDebug("Calibration interrupted!");
+            return;
+        }
+
+        v3d_add(sum_gyrocal, gyro);
+        v3d_add(sum_accelcal, accel);
+
+        count++;
+        if (((count) / 500) & 1) {
             ledon(B00000101);
             ledoff(B00001010);
         } else {
@@ -153,59 +159,17 @@ void gyro_cal(void) {
             ledoff(B00000101);
         }
 
-        for (int i = 0; i < 3; i++) {
+        delay(1000);
 
-            if (gyro[i] > limit[i])
-                limit[i] += 0.1f; // 100 gyro bias / second change
-            if (gyro[i] < limit[i])
-                limit[i] -= 0.1f;
+    } while (time - start_time < CAL_TIME);
 
-            limitf(&limit[i], 800);
+    float m = 1.0f/count;
+    v3d_mulf(sum_gyrocal, m);
+    v3d_mulf(sum_accelcal, m);
 
-            if (fabsf(gyro[i]) > 100 + fabsf(limit[i])) {
-                timestart = gettime();
-            } else {
-                lpf(&gyrocal[i], gyro[i], lpfcalc((float) looptime, 0.5 * 1e6));
-
-            }
-
-        }
-
-        while ((gettime() - time) < 1000)
-            delay(10);
-        time = gettime();
-
-    }
-
-    if (time - timestart < CAL_TIME) {
-        for (int i = 0; i < 3; i++) {
-            gyrocal[i] = 0;
-
-        }
-
-    }
-
-#ifdef SERIAL
-    printf("gyro calibration  %f %f %f \n " , gyrocal[0] , gyrocal[1] , gyrocal[2]);
-#endif
-*/
-}
-
-void acc_cal(void) {
-/*    accelcal[2] = 2048;
-    for (int y = 0; y < 500; y++) {
-        sixaxis_read();
-        for (int x = 0; x < 3; x++) {
-            lpf(&accelcal[x], accel[x], 0.92);
-        }
-        gettime(); // if it takes too long time will overflow so we call it here
-
-    }
-    accelcal[2] -= 2048;
-
-    for (int x = 0; x < 3; x++) {
-        limitf(&accelcal[x], 127);
-    }
-*/
+    v3d_copy(accelcal, sum_accelcal);
+    v3d_sub(gyrocal, sum_gyrocal);
+    LogDebug("6cb: ", count , " ", gyrocal[0], " ", gyrocal[1], " ", gyrocal[2], "\t",
+            accelcal[0], " ", accelcal[1], " ", accelcal[2]);
 }
 

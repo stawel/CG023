@@ -29,7 +29,7 @@ def setOri():
 def rotateOri(g):
     global ori
     ori =  dot(dot( M(ori[2],g[2]), M(ori[1],g[1])) , dot(M(ori[0],g[0]),ori))
-    print ori
+#    print ori
 
 def uart_parse():
     uartparser.uart_parse_stream();
@@ -47,7 +47,7 @@ def uart_parse():
                     a = array(v[3:6])/2000.
                     if(norm(a) > 100 or norm(g) > 100):
                          raise ValueError('A very specific bad thing happened')
-                    print 'wynik:', v3d_length(g), v3d_length(a)
+#                    print 'wynik:', v3d_length(g), v3d_length(a)
                     setVector(0,array([0,0,0]),a)
 #                    setVector(1,array([0,0,0]),g)
 

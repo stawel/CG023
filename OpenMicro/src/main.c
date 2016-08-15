@@ -242,8 +242,6 @@ int main(void) {
     if ( vbattfilt < (float) STOP_LOWBATTERY_TRESH) failloop(2);
 #endif
 
-    gyro_cal();
-
 #ifndef ACRO_ONLY
     imu_init();
 
@@ -297,13 +295,8 @@ int main(void) {
 
         checkrx();
 
-#ifdef ACRO_ONLY
-        gyro_read();
-#else
         sixaxis_read();
         imu_calc();
-#endif
-
         control();
 
         check_battery();

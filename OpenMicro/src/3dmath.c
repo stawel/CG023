@@ -14,6 +14,12 @@ void _v3d_mulf(float *retu, const float m, int n) {
         retu[i] *= m;
     }
 }
+void _v3d_zero(float *retu, int n) {
+    for (int i = 0; i < n; i++) {
+        retu[i] = 0.0f;
+    }
+}
+
 void _v3d_copy(float *retu, const float *v, int n) {
     for (int i = 0; i < n; i++) {
         retu[i] = v[i];
@@ -107,6 +113,10 @@ void v3d_add(float *retu, const float *v3d) {
 
 void v3d_sub(float *retu, const float *v3d) {
     _v3d_muladd(retu, v3d, -1.0f, 3);
+}
+
+void v3d_zero(float *retu) {
+    _v3d_zero(retu, 3);
 }
 
 void v3d_copy(float *retu, const float *v3d) {

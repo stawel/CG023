@@ -19,6 +19,7 @@ float v3d_inv_magnitude(const float *v3d);
 void v3d_normalize();
 void v3d_rotate(float *retu, const float *q);
 void v3d_set(float *retu, const uint8_t *data);
+void v3d_zero(float *retu);
 void v3d_mulf(float *retu, float a);
 void v3d_add(float *retu, const float *v3d);
 void v3d_sub(float *retu, const float *v3d);

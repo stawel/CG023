@@ -100,8 +100,7 @@ void control(void) {
             if (gettime() - timecommand > 3e6) {
                 // do command
 
-                gyro_cal();	// for flashing lights
-                acc_cal();
+                sixaxis_cal();	// for flashing lights
                 extern float accelcal[3];
 #ifndef ACRO_ONLY
                 fmc_write(accelcal[0] + 127, accelcal[1] + 127);
