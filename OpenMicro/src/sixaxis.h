@@ -1,12 +1,12 @@
 
-void sixaxis_init( void);
-int sixaxis_check( void);
-void sixaxis_read( void);
-void gyro_read( void);
-void gyro_cal( void);
+#ifndef _SIXAXIS_H_
+#define _SIXAXIS_H_
 
-void acc_cal(void);
+void sixaxis_init(void);
+int sixaxis_check(void);
 
+void sixaxis_read(void);
+void sixaxis_cal(void);
 
-
+#endif
 

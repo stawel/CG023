@@ -21,6 +21,7 @@ void v3d_rotate(float *retu, const float *q);
 void v3d_set(float *retu, const uint8_t *data);
 void v3d_mulf(float *retu, float a);
 void v3d_add(float *retu, const float *v3d);
+void v3d_sub(float *retu, const float *v3d);
 void v3d_copy(float *retu, const float *v3d);
 
 #endif /* _3DMATH_H_ */

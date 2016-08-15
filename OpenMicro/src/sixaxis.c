@@ -32,46 +32,39 @@
 #include "led.h"
 
 #include "drv_serial.h"
-
 #include "drv_softi2c.h"
-//#include "drv_i2c.h"
 
 #include <math.h>
+#include "3dmath.h"
 
 #define ENABLE_DEBUG
 #include "xn_debug.h"
 
-// for soft gyro filter
-extern float lpffilter(float in, int num);
 
 #include "debug.h"
 extern debug_type debug;
 
 void sixaxis_init(void) {
-// gyro soft reset
-
+    // gyro soft reset
     softi2c_write( SOFTI2C_GYRO_ADDRESS, 107, 128);
-
     delay(40000);
 
-// set pll to 1, clear sleep bit old type gyro (mpu-6050)	
+    // set pll to 1, clear sleep bit old type gyro (mpu-6050)
     softi2c_write( SOFTI2C_GYRO_ADDRESS, 107, 1);
-
     int newboard = !(0x68 == softi2c_read( SOFTI2C_GYRO_ADDRESS, 117));
 
     softi2c_write( SOFTI2C_GYRO_ADDRESS, 28, B00011000);	// 16G scale
 
-// acc lpf for the new gyro type
-//       0-6 ( same as gyro)
-    if (newboard)
+    // acc lpf for the new gyro type
+    //       0-6 ( same as gyro)
+    if (newboard) {
         softi2c_write( SOFTI2C_GYRO_ADDRESS, 29, ACC_LOW_PASS_FILTER);
+    }
 
-// gyro scale 2000 deg (FS =3)
-
+    // gyro scale 2000 deg (FS =3)
     softi2c_write( SOFTI2C_GYRO_ADDRESS, 27, 24);
 
-// Gyro DLPF low pass filter
-
+    // Gyro DLPF low pass filter
     softi2c_write( SOFTI2C_GYRO_ADDRESS, 26, GYRO_LOW_PASS_FILTER);
 }
 
@@ -97,147 +90,34 @@ float gyro[3];
 float accelcal[3];
 float gyrocal[3];
 
+//TODO: do a #define
+float sensor_rotation[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
 float lpffilter(float in, int num);
 
 void sixaxis_read(void) {
-    int data[16];
-
-    float gyronew[3];
-
+    uint8_t data[16];
     softi2c_readdata( SOFTI2C_GYRO_ADDRESS, 59, data, 14);
 
-    accel[0] = -(int16_t) ((data[0] << 8) + data[1]);
-    accel[1] = -(int16_t) ((data[2] << 8) + data[3]);
-    accel[2] = (int16_t) ((data[4] << 8) + data[5]);
+    v3d_set(accel, &data[0]);
+    v3d_rotate(accel, sensor_rotation);
 
-#ifdef SENSOR_ROTATE_90_CW
-    {
-        float temp = accel[1];
-        accel[1] = accel[0];
-        accel[0] = -temp;
-    }
-#endif
+    v3d_set(gyro, &data[8]);
+    //TODO: *-1.0f ??
+    v3d_mulf(gyro, -1.0f);
+    v3d_rotate(gyro, sensor_rotation);
 
-#ifdef SENSOR_ROTATE_90_CCW
-    {
-        float temp = accel[1];
-        accel[1] = -accel[0];
-        accel[0] = temp;
-    }
-#endif
+    v3d_add(gyro, gyrocal);
+    v3d_mulf(gyro, 0.061035156f * 0.017453292f);
 
-#ifdef SENSOR_ROTATE_180
-    {
-        accel[1] = -accel[1];
-        accel[0] = -accel[0];
-    }
-#endif		
-//order
-    gyronew[1] = (int16_t) ((data[8] << 8) + data[9]);
-    gyronew[0] = (int16_t) ((data[10] << 8) + data[11]);
-    gyronew[2] = (int16_t) ((data[12] << 8) + data[13]);
-
-    gyronew[0] = gyronew[0] - gyrocal[0];
-    gyronew[1] = gyronew[1] - gyrocal[1];
-    gyronew[2] = gyronew[2] - gyrocal[2];
-
-#ifdef SENSOR_ROTATE_90_CW
-    {
-        float temp = gyronew[1];
-        gyronew[1] = -gyronew[0];
-        gyronew[0] = temp;
-    }
-#endif
-
-#ifdef SENSOR_ROTATE_90_CCW
-    {
-        float temp = gyronew[1];
-        gyronew[1] = gyronew[0];
-        gyronew[0] = -temp;
-    }
-#endif
-
-#ifdef SENSOR_ROTATE_180
-    {
-        gyronew[1] = -gyronew[1];
-        gyronew[0] = -gyronew[0];
-    }
-#endif		
-
-//gyronew[0] = - gyronew[0];
-    gyronew[1] = -gyronew[1];
-    gyronew[2] = -gyronew[2];
-
-    for (int i = 0; i < 3; i++) {
-
-        gyronew[i] = gyronew[i] * 0.061035156f * 0.017453292f;
-#ifndef SOFT_LPF_NONE
-        gyro[i] = lpffilter(gyronew[i], i);
-
-#else
-        gyro[i] = gyronew[i];
-#endif
-    }
-
-    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ",accel[2]);
-}
-
-void gyro_read(void) {
-    int data[6];
-
-    softi2c_readdata( SOFTI2C_GYRO_ADDRESS, 67, data, 6);
-
-    float gyronew[3];
-    // order
-    gyronew[1] = (int16_t) ((data[0] << 8) + data[1]);
-    gyronew[0] = (int16_t) ((data[2] << 8) + data[3]);
-    gyronew[2] = (int16_t) ((data[4] << 8) + data[5]);
-
-    gyronew[0] = gyronew[0] - gyrocal[0];
-    gyronew[1] = gyronew[1] - gyrocal[1];
-    gyronew[2] = gyronew[2] - gyrocal[2];
-
-#ifdef SENSOR_ROTATE_90_CW
-    {
-        float temp = gyronew[1];
-        gyronew[1] = -gyronew[0];
-        gyronew[0] = temp;
-    }
-#endif
-
-#ifdef SENSOR_ROTATE_90_CCW
-    {
-        float temp = gyronew[1];
-        gyronew[1] = gyronew[0];
-        gyronew[0] = -temp;
-    }
-#endif
-
-#ifdef SENSOR_ROTATE_180
-    {
-        gyronew[1] = -gyronew[1];
-        gyronew[0] = -gyronew[0];
-    }
-#endif		
-
-//gyronew[0] = - gyronew[0];
-    gyronew[1] = -gyronew[1];
-    gyronew[2] = -gyronew[2];
-
-    for (int i = 0; i < 3; i++) {
-        gyronew[i] = gyronew[i] * 0.061035156f * 0.017453292f;
-#ifndef SOFT_LPF_NONE
-        gyro[i] = lpffilter(gyronew[i], i);
-#else
-        gyro[i] = gyronew[i];
-#endif
-    }
+    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
+    LogDebug("6cb: ", gyrocal[0], " ", gyrocal[1], " ", gyrocal[2], "\t", accelcal[0], " ", accelcal[1], " ", accelcal[2]);
 }
 
 #define CAL_TIME 2e6
 
 void gyro_cal(void) {
-    int data[6];
+/*    uint8_t data[6];
     float limit[3];
     unsigned long time = gettime();
     unsigned long timestart = time;
@@ -308,11 +188,11 @@ void gyro_cal(void) {
 #ifdef SERIAL
     printf("gyro calibration  %f %f %f \n " , gyrocal[0] , gyrocal[1] , gyrocal[2]);
 #endif
-
+*/
 }
 
 void acc_cal(void) {
-    accelcal[2] = 2048;
+/*    accelcal[2] = 2048;
     for (int y = 0; y < 500; y++) {
         sixaxis_read();
         for (int x = 0; x < 3; x++) {
@@ -326,6 +206,6 @@ void acc_cal(void) {
     for (int x = 0; x < 3; x++) {
         limitf(&accelcal[x], 127);
     }
-
+*/
 }
 

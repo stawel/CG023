@@ -3,11 +3,12 @@
 //TODO: add
 float Q_rsqrt(float number);
 
-void _v3d_add(float *retu, const float *v, int n) {
+void _v3d_muladd(float *retu, const float *v, float m, int n) {
     for (int i = 0; i < n; i++) {
-        retu[i] += v[i];
+        retu[i] += m*v[i];
     }
 }
+
 void _v3d_mulf(float *retu, const float m, int n) {
     for (int i = 0; i < n; i++) {
         retu[i] *= m;
@@ -78,21 +79,22 @@ void v3d_normalize(float *r) {
 }
 
 void v3d_rotate(float *retu, const float *q) {
-    float t1[4], t2[4], t3[4];
-    t1[0] = 0.0f;
-    v3d_copy(t1 + 1, retu);
+    float p[4], t2[4], t3[4];
+    p[0] = 0.0f;
+    v3d_copy(p + 1, retu);
 
-    quaternion_product(t2, q, t1);
-    quaternion_copy(t1, q);
-    quaternion_product(t3, t2, t1);
+    quaternion_product(t2, q, p);
+    quaternion_copy(p, q);
+    quaternion_conjugate(p);
+    quaternion_product(t3, t2, p);
 
     v3d_copy(retu, t3 + 1);
 }
 
 void v3d_set(float *retu, const uint8_t *data) {
-    retu[0] = (int16_t) ((data[0] << 8) + data[1]);
-    retu[1] = (int16_t) ((data[2] << 8) + data[3]);
-    retu[2] = (int16_t) ((data[4] << 8) + data[5]);
+    for(int i=0;i<3;i++) {
+        retu[i] = (int16_t) (((uint16_t)data[i*2] << 8) + data[i*2+1]);
+    }
 }
 
 void v3d_mulf(float *retu, float m) {
@@ -100,7 +102,11 @@ void v3d_mulf(float *retu, float m) {
 }
 
 void v3d_add(float *retu, const float *v3d) {
-    _v3d_add(retu, v3d, 3);
+    _v3d_muladd(retu, v3d, 1.0f, 3);
+}
+
+void v3d_sub(float *retu, const float *v3d) {
+    _v3d_muladd(retu, v3d, -1.0f, 3);
 }
 
 void v3d_copy(float *retu, const float *v3d) {
