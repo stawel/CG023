@@ -24,34 +24,43 @@ def c(char):
     return chr(ord(char)+128)
 
 def unpack4bytes(t):
+    if len(raw_buffer) < 4:
+        raw_buffer.appendleft(c(t))
+        raise NameError("My error char: "+ t);
     f = ''.join([ raw_buffer.popleft() for x in range(0,4) ])
     return struct.unpack(t, f)[0]
 
 def endline(t = []):
     global last_line
-    last_line = last_line + t
+    for i in t:
+        add(str(i))
+    add('\n')
     line = ''.join(last_line)
-#    print line
     line_buffer.append(line)
     last_line = []
 
 def add(t):
+    sys.stdout.write(str(t))
     last_line.append(str(t))
 
 def parse_raw_buffer():
-    char = raw_buffer.popleft()
-#    add('[' + str(ord(char)) + ']')
-    if char == '\n':
-        endline()
-    elif char == c('F'):
-        endline()
-        endline(['[COPTER BUFFER FULL]'])
-    elif char == c('f'):
-        add(unpack4bytes('f'))
-    elif char == c('i'):
-        add(unpack4bytes('i'))
-    else:
-        add(char)
+    try:
+        while len(raw_buffer) > 0:
+            char = raw_buffer.popleft()
+#                add('[' + str(ord(char)) + ']')
+            if char == '\n':
+                endline()
+            elif char == c('F'):
+                endline()
+                endline(['[COPTER BUFFER FULL]'])
+            elif char == c('f'):
+                add(unpack4bytes('f'))
+            elif char == c('i'):
+                add(unpack4bytes('i'))
+            else:
+                add(char)
+    except NameError as e:
+        pass
 
 def parse_raw_stream():
     global package_nr, last_line
@@ -82,11 +91,10 @@ def uart_parse_stream():
     raw_stream.extend(r);
     while len(raw_stream) >= package_len:
         parse_raw_stream()
-        while len(raw_buffer) >= 5:
-            parse_raw_buffer();
+        parse_raw_buffer()
 
-
-
+#    endline(["raw_stream len: ", str(len(raw_stream)), "raw_buffer len: ", str(len(raw_buffer)), " inWating: ", str(uart.inWaiting())])
+    sys.stdout.flush()
 
 
 #while True:

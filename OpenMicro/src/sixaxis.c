@@ -113,12 +113,12 @@ void sixaxis_read(void) {
     v3d_mulf(gyro, 0.061035156f * 0.017453292f);
     v3d_sub(gyro, gyrocal);
 
-    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
+//    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
 }
 
 #define CAL_TIME 2000*1000
 //TODO: set errors
-#define ACCELCAL_ERROR  30.0f
+#define ACCELCAL_ERROR  25.0f
 #define GYROCAL_ERROR   0.005f
 
 static int try_sixaxis_cal() {

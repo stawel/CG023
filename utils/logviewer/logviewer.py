@@ -35,7 +35,6 @@ def uart_parse():
     uartparser.uart_parse_stream();
     while len(uartparser.line_buffer) > 0:
         line = uartparser.line_buffer.popleft()
-        print line
         a = array([0,0,0])
         g = array([0,0,0])
         try:
