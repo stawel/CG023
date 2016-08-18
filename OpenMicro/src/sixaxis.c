@@ -99,22 +99,22 @@ float lpffilter(float in, int num);
 
 void sixaxis_read(void) {
     uint8_t data[16];
-    softi2c_readdata( SOFTI2C_GYRO_ADDRESS, 59, data, 14);
+//    softi2c_readdata( SOFTI2C_GYRO_ADDRESS, 59, data, 14);
 
-    v3d_set(accel, &data[0]);
+//    v3d_set(accel, &data[0]);
     v3d_rotate(accel, sensor_rotation_quaternion);
 
-    v3d_set(gyro, &data[8]);
+//    v3d_set(gyro, &data[8]);
     //TODO: *-1.0f ??
-    v3d_mulf(gyro, -1.0f);
+//    v3d_mulf(gyro, -1.0f);
     v3d_rotate(gyro, sensor_rotation_quaternion);
     v3d_rotate(gyro, hotfix_rotation_quaternion);
 
-    v3d_mulf(gyro, 0.061035156f * 0.017453292f);
+/*    v3d_mulf(gyro, 0.061035156f * 0.017453292f);
     v3d_sub(gyro, gyrocal);
 
-//    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
-}
+    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
+*/}
 
 #define CAL_TIME 2000*1000
 //TODO: set errors

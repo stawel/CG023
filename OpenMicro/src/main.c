@@ -273,6 +273,7 @@ int main(void) {
     while (1) {
         // gettime() needs to be called at least once per second
         unsigned long time = gettime();
+        unsigned long t1,t2,t3;
         looptime = ((uint32_t) (time - lastlooptime));
         if (looptime <= 0)
             looptime = 1;
@@ -295,18 +296,25 @@ int main(void) {
         }
 
         checkrx();
+        t1 = gettime();
 
         sixaxis_read();
+        t2 = gettime();
+
         imu_calc();
         control();
 
         check_battery();
         set_leds();
 
+        t3 = gettime();
+
 // the delay is required or it becomes endless loop ( truncation in time routine)
         do {
             delay(1);
         } while ((gettime() - time) < LOOPTIME);
+
+        LogDebug("loop time: ", looptime, " ", t1, " ", t2 - t1, " ", t3 - t2);
 
     }	// end loop
 }

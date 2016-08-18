@@ -49,6 +49,12 @@ def uart_parse():
 #                    print 'wynik:', v3d_length(g), v3d_length(a)
                     setVector(0,array([0,0,0]),a)
 #                    setVector(1,array([0,0,0]),g)
+            elif p[0] == 'G:':
+                v = [ float(x) for x in p[2].split() ]
+                if len(v) == 3:
+                    G = array(v[0:3])/2000.
+                    setVector(4, array([0,0,0]), G)
+
 
         except:
             print "parse exception"
@@ -62,7 +68,7 @@ def uart_parse():
 #------------------------------------------------------
 fig1 = plt.figure()
 ax = p3.Axes3D(fig1)
-vectors3d = [ax.plot(array([0,1]),array([0,1]),array([0,1]),color)[0] for color in ['r','g', 'b', 'r']]
+vectors3d = [ax.plot(array([0,1]),array([0,1]),array([0,1]),color)[0] for color in ['y','g', 'r', 'b', 'k' ]]
 #dot3d, = plt.plot([0.5],[0.5],'g.')
 
 

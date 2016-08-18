@@ -12,6 +12,13 @@
 
 #include <stdlib.h>
 
+
+
+#define ENABLE_DEBUG
+#include "xn_debug.h"
+
+
+
 // for arm_sin_f32
 //   --"-- cos
 //#define ARM_MATH_CM3
@@ -254,6 +261,8 @@ void imu_calc(void) {
     attitude[0] = atan2approx(EstG[0], EstG[2]);
 
     attitude[1] = atan2approx(EstG[1], EstG[2]);
+
+//    LogDebug("G: ", GEstG[0], " ", GEstG[1], " ", GEstG[2]);
 
 }
 
