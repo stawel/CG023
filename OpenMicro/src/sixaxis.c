@@ -40,8 +40,6 @@
 #define ENABLE_DEBUG
 #include "xn_debug.h"
 
-#include "debug.h"
-extern debug_type debug;
 
 void sixaxis_init(void) {
     // gyro soft reset
@@ -89,32 +87,46 @@ float gyro[3];
 float accelcal[3];
 float gyrocal[3];
 
-//TODO: do a #define
-float sensor_rotation_quaternion[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-//TODO: remove hotfix (rotation 90 degree)
-float hotfix_rotation_quaternion[4] = { 0.707106781186547524f, 0.0f, 0.0f, 0.707106781186547524f };
-
-float lpffilter(float in, int num);
+//TODO: to config
+#define SENSOR_ROTATION 180
+#define GYRO_FACTOR 0.061035156f * 0.017453292f
 
 void sixaxis_read(void) {
     uint8_t data[16];
-//    softi2c_readdata( SOFTI2C_GYRO_ADDRESS, 59, data, 14);
+    softi2c_readdata( SOFTI2C_GYRO_ADDRESS, 59, data, 14);
 
-//    v3d_set(accel, &data[0]);
-    v3d_rotate(accel, sensor_rotation_quaternion);
+    v3d_set(accel, &data[0]);
+    v3d_static_rotate(accel, SENSOR_ROTATION);
 
-//    v3d_set(gyro, &data[8]);
-    //TODO: *-1.0f ??
-//    v3d_mulf(gyro, -1.0f);
-    v3d_rotate(gyro, sensor_rotation_quaternion);
-    v3d_rotate(gyro, hotfix_rotation_quaternion);
 
-/*    v3d_mulf(gyro, 0.061035156f * 0.017453292f);
+    v3d_set(gyro, &data[8]);
+    v3d_static_rotate(gyro, SENSOR_ROTATION);
     v3d_sub(gyro, gyrocal);
 
-    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
-*/}
+//    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
+}
+
+float rq[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
+
+extern float looptime;
+
+void sixaxis_calc(void) {
+    float q[4], q2[4];
+    float f = GYRO_FACTOR *0.5f;
+    f *= looptime;
+
+    sixaxis_read();
+
+    v3d_mulf(gyro, f);//0.001*0.5);
+    quaternion_rotationX2(q, gyro);
+    quaternion_product(q2, rq, q);
+    quaternion_copy(rq, q2);
+    quaternion_normalize(rq);
+
+    LogDebug("Q: ", rq[0], " ", rq[1], " ", rq[2], " ", rq[3]);
+}
+
 
 #define CAL_TIME 2000*1000
 //TODO: set errors
@@ -146,7 +158,7 @@ static int try_sixaxis_cal() {
         v3d_sub(new_gyrocal, gyro);
         v3d_sub(new_accelcal, accel);
 
-        float gy_error = v3d_magnitude(new_gyrocal);
+        float gy_error = GYRO_FACTOR*v3d_magnitude(new_gyrocal);
         float ac_error = v3d_magnitude(new_accelcal);
 
         if (gy_error > GYROCAL_ERROR || ac_error > ACCELCAL_ERROR) {

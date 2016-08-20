@@ -8,6 +8,16 @@ void _v3d_muladd(float *retu, const float *v, float m, int n) {
         retu[i] += m*v[i];
     }
 }
+void _v3d_add(float *retu, const float *v, int n) {
+    for (int i = 0; i < n; i++) {
+        retu[i] += v[i];
+    }
+}
+void _v3d_sub(float *retu, const float *v, int n) {
+    for (int i = 0; i < n; i++) {
+        retu[i] -= v[i];
+    }
+}
 
 void _v3d_mulf(float *retu, const float m, int n) {
     for (int i = 0; i < n; i++) {
@@ -44,6 +54,29 @@ void quaternion_product(float *retu, const float * r, const float *q) {
     retu[3] = r[0] * q[3] + r[1] * q[2] - r[2] * q[1] + r[3] * q[0];
 }
 
+#define v3d_sin(val) (val)
+#define v3d_cos(val) 1.0f
+
+
+void quaternion_rotationX2(float *retu, const float * rv) {
+    float c2x = v3d_cos(rv[0]);
+    float c2y = v3d_cos(rv[1]);
+    float c2z = v3d_cos(rv[2]);
+
+    float s2x = v3d_sin(rv[0]);
+    float s2y = v3d_sin(rv[1]);
+    float s2z = v3d_sin(rv[2]);
+
+    float q[4];
+    q[0] = c2x*c2y; q[1] = s2x*c2y; q[2] = c2x*s2y; q[3] = s2x*s2y;
+    quaternion_copy(retu, q);
+    quaternion_mulf(retu, c2z);
+    quaternion_mulf(q, s2z);
+    quaternion_mul_k(q);
+    quaternion_add(retu, q);
+}
+
+
 void quaternion_conjugate(float *retu) {
     v3d_mulf(retu + 1, -1.0f);
 }
@@ -63,6 +96,19 @@ void quaternion_normalize(float *r) {
 
 void quaternion_mulf(float *retu, float m) {
     _v3d_mulf(retu, m, 4);
+}
+
+void quaternion_mul_k(float *retu) {
+    float q[4];
+    quaternion_copy(q, retu);
+    retu[0] = -q[3];
+    retu[1] = q[2];
+    retu[2] = -q[1];
+    retu[3] = q[0];
+}
+
+void quaternion_add(float *retu, const float *q) {
+    _v3d_add(retu, q, 4);
 }
 
 void quaternion_copy(float *retu, const float *v) {
@@ -122,3 +168,21 @@ void v3d_zero(float *retu) {
 void v3d_copy(float *retu, const float *v3d) {
     _v3d_copy(retu, v3d, 3);
 }
+
+
+
+void v3d_rotate_90(float * v) {
+    float t = v[1];
+    v[1] = -v[0];
+    v[0] = t;
+}
+void v3d_rotate_180(float * v) {
+    v[1] = -v[1];
+    v[0] = -v[0];
+}
+void v3d_rotate_270(float * v) {
+    float t = v[1];
+    v[1] = v[0];
+    v[0] = -t;
+}
+

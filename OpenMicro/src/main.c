@@ -298,10 +298,10 @@ int main(void) {
         checkrx();
         t1 = gettime();
 
-        sixaxis_read();
+        sixaxis_calc();
         t2 = gettime();
 
-        imu_calc();
+//        imu_calc();
         control();
 
         check_battery();
