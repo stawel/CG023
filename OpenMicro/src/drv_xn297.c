@@ -152,6 +152,7 @@ void xn_writepayload(const uint8_t data[], uint8_t size) {
     xn_writedata(W_TX_PAYLOAD, data, size);
 }
 
+//#define DEBUG_XN___
 void xn_setchannel(uint8_t channel) {
     xn_debug_setchannel(channel);
 #ifdef DEBUG_XN___

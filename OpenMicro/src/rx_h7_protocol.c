@@ -36,7 +36,7 @@
 
 #include "protocol_timer.h"
 
-//#define ENABLE_DEBUG
+#define ENABLE_DEBUG
 #include "xn_debug.h"
 
 #ifdef RX_H7_PROTOCOL
@@ -197,7 +197,7 @@ void change_channel() {
 #endif
 
     LogDebug("rx p: ", package, " i: ", channel_idx, " c: ",
-            H7_freq[channel_idx] + channeloffset, " td: ", timediff);
+            (int)(H7_freq[channel_idx] + channeloffset), " td: ", timediff);
 }
 
 void protocol_timer_irq_handler() {

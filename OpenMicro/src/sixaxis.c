@@ -90,7 +90,6 @@ float gyrocal[3];
 
 //TODO: to config
 #define SENSOR_ROTATION 180
-#define GYRO_FACTOR 0.061035156f * 0.017453292f
 
 void sixaxis_read(void) {
     uint8_t data[16];
@@ -102,6 +101,8 @@ void sixaxis_read(void) {
 
     v3d_set(gyro, &data[8]);
     v3d_static_rotate(gyro, SENSOR_ROTATION);
+
+    v3d_mulf(gyro, GYRO_FACTOR);
     v3d_sub(gyro, gyrocal);
 
 //    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
@@ -113,18 +114,18 @@ extern float looptime;
 
 void sixaxis_calc(void) {
     float q[4], q2[4];
-    float f = GYRO_FACTOR *0.5f;
-    f *= looptime;
+    float f = 0.5f * looptime;
 
     sixaxis_read();
+    v3d_copy(q2, gyro);
 
-    v3d_mulf(gyro, f);//0.001*0.5);
-    quaternion_rotationX2(q, gyro);
+    v3d_mulf(q2, f);//0.001*0.5);
+    quaternion_rotationX2(q, q2);
     quaternion_product(q2, rq, q);
     quaternion_copy(rq, q2);
     quaternion_normalize(rq);
 
-    LogDebug("Q: ", rq[0], " ", rq[1], " ", rq[2], " ", rq[3]);
+//    LogDebug("Q: ", rq[0], " ", rq[1], " ", rq[2], " ", rq[3]);
 }
 
 

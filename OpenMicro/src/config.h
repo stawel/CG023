@@ -135,8 +135,8 @@
 //#define RX_CG023_SWAP_YAWROLL
 
 // Flash saving features
-//#define DISABLE_HEADLESS
-//#define DISABLE_FLIP_SEQUENCER
+#define DISABLE_HEADLESS
+#define DISABLE_FLIP_SEQUENCER
 
 
 

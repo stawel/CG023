@@ -16,7 +16,7 @@ void xn_debug_irq_handler(uint8_t status);
 
 #ifdef ENABLE_DEBUG
 
-#define xn_debug_print(x) _Generic((x), unsigned long: xn_debug_print_long, char *: xn_debug_print_string, uint8_t: xn_debug_print_u8, float: xn_debug_print_float) (x)
+#define xn_debug_print(x) _Generic((x), uint8_t: xn_debug_print_u8, int: xn_debug_print_long, unsigned long: xn_debug_print_long, char *: xn_debug_print_string, float: xn_debug_print_float) (x)
 
 #define LogDebug_();
 #define LogDebug_1(x, args...) xn_debug_print(x);

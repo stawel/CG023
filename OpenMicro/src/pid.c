@@ -28,7 +28,7 @@
 
 //#define NORMAL_DTERM
 //#define SECOND_ORDER_DTERM
-#define NEW_DTERM
+//#define NEW_DTERM
 
 #include <stdbool.h>
 #include "pid.h"
@@ -71,7 +71,6 @@ extern float error[PIDNUMBER];
 static float lasterror[PIDNUMBER];
 
 extern float looptime;
-extern float gyro[3];
 extern int onground;
 
 extern float looptime;
@@ -139,7 +138,7 @@ float pid(int x) {
     pidoutput[x] = error[x] * (1 - b[x]) * pidkp[x];
 
     // b
-    pidoutput[x] += -(b[x]) * pidkp[x] * gyro[x];
+  //  pidoutput[x] += -(b[x]) * pidkp[x] * gyro[x];
 
     // I term
     pidoutput[x] += ierror[x];

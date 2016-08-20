@@ -4,7 +4,7 @@
 #include "drv_time.h"
 #include "drv_spi.h"
 
-//#define ENABLE_DEBUG
+#define ENABLE_DEBUG
 #include "xn_debug.h"
 
 #define XN_DEBUG_BUFFER     256
@@ -66,8 +66,6 @@ void xn_debug_print_data(char c, uint32_t d, uint8_t size) {
         }
     }
 }
-
-//#define typechar(x) _Generic((x), float: 'f', int: 'i', unsigned long: 'i', char *: 's', uint8_t: '8')
 
 void xn_debug_print_char(char c) {
     if (ensure_free_space(2)) {

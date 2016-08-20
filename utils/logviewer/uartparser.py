@@ -23,12 +23,20 @@ def parse_float(x):
 def c(char):
     return chr(ord(char)+128)
 
-def unpack4bytes(t):
+def unpack4bytes(c, t):
     if len(raw_buffer) < 4:
-        raw_buffer.appendleft(c(t))
+        raw_buffer.appendleft(c)
         raise NameError("My error char: "+ t);
     f = ''.join([ raw_buffer.popleft() for x in range(0,4) ])
     return struct.unpack(t, f)[0]
+
+def unpack1bytes(c, t):
+    if len(raw_buffer) < 1:
+        raw_buffer.appendleft(c)
+        raise NameError("My error char: "+ t);
+    f = ''.join([ raw_buffer.popleft() for x in range(0,1) ])
+    return struct.unpack(t, f)[0]
+
 
 def endline(t = []):
     global last_line
@@ -54,9 +62,11 @@ def parse_raw_buffer():
                 endline()
                 endline(['[COPTER BUFFER FULL]'])
             elif char == c('f'):
-                add(unpack4bytes('f'))
+                add(unpack4bytes(char, 'f'))
             elif char == c('i'):
-                add(unpack4bytes('i'))
+                add(unpack4bytes(char, 'i'))
+            elif char == c('8'):
+                add(unpack1bytes(char, 'B'))
             else:
                 add(char)
     except NameError as e:
@@ -97,5 +107,5 @@ def uart_parse_stream():
     sys.stdout.flush()
 
 
-#while True:
-#    uart_parse()
+while True:
+    uart_parse_stream()

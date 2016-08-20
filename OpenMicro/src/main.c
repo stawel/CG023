@@ -44,6 +44,7 @@
 #include "drv_i2c.h"
 
 #include "drv_softi2c.h"
+#include "sixaxis.h"
 
 #include "binary.h"
 
@@ -99,7 +100,7 @@ void check_battery() {
     float battadc = adc_read(0);
     // average of all 4 motor thrusts
     // should be proportional with battery current
-    extern float thrsum; // from control.c
+//    extern float thrsum; // from control.c
 
     //vref = startvref / adc_read(1) ;
 
@@ -107,7 +108,7 @@ void check_battery() {
 
     // filter motorpwm so it has the same delay as the filtered voltage
     // ( or they can use a single filter)
-    lpf(&thrfilt, thrsum, 0.9968f); // 0.5 sec at 1.6ms loop time
+//    lpf(&thrfilt, thrsum, 0.9968f); // 0.5 sec at 1.6ms loop time
 
     lpf(&vbattfilt, battadc, 0.9968f);
 
@@ -124,6 +125,10 @@ void check_battery() {
         lowbatt = 1;
     else
         lowbatt = 0;
+
+    //TODO: low battery
+    lowbatt = 0;
+
 }
 
 void set_leds() {
@@ -314,7 +319,7 @@ int main(void) {
             delay(1);
         } while ((gettime() - time) < LOOPTIME);
 
-        LogDebug("loop time: ", looptime, " ", t1, " ", t2 - t1, " ", t3 - t2);
+//        LogDebug("loop time: ", looptime, " ", t1, " ", t2 - t1, " ", t3 - t2);
 
     }	// end loop
 }
