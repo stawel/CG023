@@ -36,7 +36,6 @@
 #include "drv_pwm.h"
 #include "drv_adc.h"
 #include "drv_gpio.h"
-#include "drv_serial.h"
 #include "rx.h"
 #include "drv_spi.h"
 #include "control.h"
@@ -59,7 +58,6 @@ debug_type debug;
 // hal
 void clk_init(void);
 
-void imu_init(void);
 
 // looptime in seconds
 float looptime;
@@ -249,7 +247,6 @@ int main(void) {
 
     sixaxis_cal();
 #ifndef ACRO_ONLY
-    imu_init();
 
 // read accelerometer calibration values from option bytes ( 2* 8bit)
     extern float accelcal[3];

@@ -31,7 +31,6 @@
 #include "config.h"
 #include "led.h"
 
-#include "drv_serial.h"
 #include "drv_softi2c.h"
 
 #include <math.h>

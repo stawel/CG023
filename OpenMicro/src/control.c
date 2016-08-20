@@ -34,7 +34,6 @@
 #include "drv_time.h"
 #include "sixaxis.h"
 #include "drv_fmc.h"
-#include "flip_sequencer.h"
 #include "sixaxis.h"
 
 //#define ENABLE_DEBUG
