@@ -36,7 +36,7 @@
 
 #include "protocol_timer.h"
 
-#define ENABLE_DEBUG
+//#define ENABLE_DEBUG
 #include "xn_debug.h"
 
 #ifdef RX_H7_PROTOCOL
@@ -54,7 +54,7 @@ extern char auxchange[AUXNUMBER];
 #define PACKET_SIZE 9   // packets have 9-byte payload
 #define PACKET_PERIOD    2625
 
-#define ALWAYS_CHANGE_CHANNEL
+//#define ALWAYS_CHANGE_CHANNEL
 
 int failsafe = 0;
 uint8_t rxdata[PACKET_SIZE];

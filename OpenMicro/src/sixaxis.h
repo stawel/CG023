@@ -10,6 +10,9 @@ void sixaxis_calc(void);
 void sixaxis_cal();
 
 
+extern float world_quaternion[4];
+extern float world_z_quaternion[4];
+
 extern float gyro[3];
 #define GYRO_FACTOR 0.0010642251536550791f  //(PI/180) / 16.4
 

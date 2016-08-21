@@ -101,30 +101,46 @@ void sixaxis_read(void) {
     v3d_set(gyro, &data[8]);
     v3d_static_rotate(gyro, SENSOR_ROTATION);
 
-    v3d_mulf(gyro, GYRO_FACTOR);
+    v3d_mulf(gyro, -GYRO_FACTOR);
     v3d_sub(gyro, gyrocal);
 
 //    LogDebug("6ax: ", gyro[0], " ", gyro[1], " ", gyro[2], "\t", accel[0], " ", accel[1], " ", accel[2]);
 }
 
-float rq[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
+float world_quaternion[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
+float world_z_quaternion[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
 
 extern float looptime;
 
 void sixaxis_calc(void) {
-    float q[4], q2[4];
+    float q[4], q2[4] ,a[4], wq[4];
     float f = 0.5f * looptime;
+
+    float t = 0.001f*0.5f;
+
 
     sixaxis_read();
     v3d_copy(q2, gyro);
 
-    v3d_mulf(q2, f);//0.001*0.5);
+    v3d_mulf(q2, f);
     quaternion_rotationX2(q, q2);
-    quaternion_product(q2, rq, q);
-    quaternion_copy(rq, q2);
-    quaternion_normalize(rq);
+    quaternion_product(wq, q, world_quaternion);
+    quaternion_copy(world_quaternion, wq);
 
-//    LogDebug("Q: ", rq[0], " ", rq[1], " ", rq[2], " ", rq[3]);
+
+    //filter: add 'a' (acceleration)   q2 = x + q*k*q^(-1) * (t*a); where x is is so that |q2| = 1.
+    v3d_to_quaternion(a, accel);
+    v3d_normalize_t(a+1, t);
+    quaternion_rotate_k(world_z_quaternion, wq);
+    quaternion_product(q2, world_z_quaternion, a);
+    quaternion_normalize_1(q2);
+
+    quaternion_product(world_quaternion, q2, wq);
+
+    quaternion_normalize(world_quaternion);
+
+    LogDebug("Q: ", world_quaternion[0], " ", world_quaternion[1], " ", world_quaternion[2], " ", world_quaternion[3]);
+    LogDebug("3ax: ", accel[0], " ", accel[1], " ", accel[2]);
 }
 
 

@@ -107,5 +107,5 @@ def uart_parse_stream():
     sys.stdout.flush()
 
 
-while True:
-    uart_parse_stream()
+#while True:
+#    uart_parse_stream()

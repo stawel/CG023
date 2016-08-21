@@ -145,9 +145,14 @@ void control(void) {
 
 // rate only build
     //TODO: change ROLL, PITCH, YAW
-    error[ROLL] = rx[ROLL] * (float) MAX_RATE * DEGTORAD - gyro[1];
-    error[PITCH] = rx[PITCH] * (float) MAX_RATE * DEGTORAD + gyro[0];
-    error[YAW] = rx[YAW] * (float) MAX_RATEYAW * DEGTORAD + gyro[YAW];
+/*    error[ROLL] = rx[ROLL] * (float) MAX_RATE * DEGTORAD + gyro[1]*0.1;
+    error[PITCH] = rx[PITCH] * (float) MAX_RATE * DEGTORAD - gyro[0]*0.1;
+    error[YAW] = rx[YAW] * (float) MAX_RATEYAW * DEGTORAD - gyro[YAW]*0.1;
+*/
+
+    error[ROLL] = rx[ROLL] * (float) MAX_RATE * DEGTORAD + world_z_quaternion[1];
+    error[PITCH] = rx[PITCH] * (float) MAX_RATE * DEGTORAD + world_z_quaternion[2];
+    error[YAW] = rx[YAW] * (float) MAX_RATEYAW * DEGTORAD - gyro[YAW]*0.1;
 
 //    error[YAW] = 0.;
 //    error[ROLL] = 0.;

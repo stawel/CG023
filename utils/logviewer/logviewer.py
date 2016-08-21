@@ -89,7 +89,6 @@ def uart_parse():
                 v = [ float(x) for x in p[2].split() ]
                 if len(v) == 6:
                     g = array(v[0:3])/200.
-                    a = array(v[3:6])/2000.
                     if(norm(a) > 100 or norm(g) > 100):
                          raise ValueError('A very specific bad thing happened')
 #                    print 'wynik:', v3d_length(g), v3d_length(a)
@@ -106,6 +105,12 @@ def uart_parse():
                 if len(v) == 4:
                     q = array(v[0:4])
                     q_read = True
+
+            elif p[0] == '3ax:':
+                v = [ float(x) for x in p[2].split() ]
+                if len(v) == 3:
+                    a = array(v[0:3])/2000.
+                    setVector(0,array([0,0,0]),a)
 
         except:
             print "parse exception"
