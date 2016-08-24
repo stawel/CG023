@@ -4,7 +4,7 @@
 #include "drv_time.h"
 #include "drv_spi.h"
 
-#define ENABLE_DEBUG
+//#define ENABLE_DEBUG
 #include "xn_debug.h"
 
 //#define ENABLE_2MBPS_DEBUG

@@ -174,7 +174,7 @@ void control(void) {
     pid(YAW);
 
     extern float ierror[3];
-    LogDebug("r: ", error[ROLL], " ", pidoutput[ROLL], " ", ierror[ROLL]);
+    LogDebug("r: ", gettime(), " ", error[ROLL], " ", pidoutput[ROLL], " ", ierror[ROLL]);
 
 //    LogDebug("O: ", pidoutput[ROLL], " ", pidoutput[PITCH], " ", pidoutput[YAW]);
 
