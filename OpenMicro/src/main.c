@@ -316,7 +316,7 @@ int main(void) {
             delay(1);
         } while ((gettime() - time) < LOOPTIME);
 
-        LogDebug("loop time: ", looptime, " ", t1, " ", t2 - t1, " ", t3 - t2);
+//        LogDebug("loop time: ", looptime, " ", t1, " ", t2 - t1, " ", t3 - t2);
 
     }	// end loop
 }

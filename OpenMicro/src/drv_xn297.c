@@ -20,10 +20,132 @@
 #define XN297_IRQ_PIN    GPIO_Pin_3
 #define XN297_IRQ_PORT   GPIOA
 
-static const uint8_t bbcal[6] = { 0x3f, 0x4c, 0x84, 0x6F, 0x9c, 0x20 };
-static const uint8_t rfcal[8] =
-        { 0x3e, 0xc9, 220, 0x80, 0x61, 0xbb, 0xab, 0x9c };
-static const uint8_t demodcal[6] = { 0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03 };
+#define XN_INIT6
+
+#ifdef XN_INIT1 //xn927 datasheet
+/* 1MBPS:
+ *  p=1 ~  794us
+ *  p=2 ~ 1453us
+ *  p=3 ~ 2118us
+ * 2MBPS:
+ *  p=1 ~  687us
+ *  p=2 ~ 1243us
+ *  p=3 ~ 1795us
+ *  p=4 ~ 2351us
+ */
+static const uint8_t demodcal[6] = {0x39, 0x0B, 0xDF, 0x00, 0xA7, 0x03};
+static const uint8_t rfcal[8] = {0x3e, 0xCA, 0x9A, 0xB0, 0x61, 0x83, 0x2B, 0x95};
+static const uint8_t bbcal[6] = {0x3f, 0x7F, 0x84, 0x67, 0x9C, 0x20};
+#endif
+#ifdef XN_INIT2
+/* 1MBPS:
+ *  p=1 ~  795us
+ *  p=2 ~ 1527us
+ *  p=3 ~ 2119us
+ * 2MBPS:
+ *  p=1 ~  687us
+ *  p=2 ~ 1239us
+ *  p=3 ~ 1797us
+ *  p=4 ~ 2352us
+ */
+static const uint8_t demodcal[6] = {0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03};
+static const uint8_t rfcal[8] = {0x3e, 0xc9, 0x9a, 0xb0, 0x61, 0xbb, 0xab, 0x9c};
+static const uint8_t bbcal[6] = {0x3f, 0x4c, 0x84, 0x67, 0x9c, 0x20};
+#endif
+#ifdef XN_INIT3 //very slow transmission
+/* 1MBPS:
+ *  p=1 ~  919us,
+ *  p=2 ~ 1710us
+ *  p=3 ~ 2500us
+ * 2MBPS:
+ *  p=1 ~  816us
+ *  p=2 ~ 1567us
+ *  p=3 ~ 2181us
+ *  p=4 ~
+ */
+static const uint8_t demodcal[6] = {0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03};
+static const uint8_t rfcal[8] = {0x3e, 0xc9, 220, 0x80, 0x61, 0xbb, 0xab, 0x9c};
+static const uint8_t bbcal[6] = {0x3f, 0x4c, 0x84, 0x6F, 0x9c, 0x20};
+#endif
+#ifdef XN_INIT4
+/* 1MBPS:
+ *  p=1 ~  796us
+ *  p=2 ~ 1456us
+ *  p=3 ~ 2118us
+ * 2MBPS:
+ *  p=1 ~  688us
+ *  p=2 ~ 1239us
+ *  p=3 ~ 1794us
+ *  p=4 ~ 2355us
+ */
+static const uint8_t demodcal[] = { 0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03, 0xab, 0x9c };
+static const uint8_t rfcal[] = { 0x3e, 0xc9, 0x9a, 0xb0, 0x61, 0xbb, 0xab, 0x9c };
+static const uint8_t bbcal[] = { 0x3f, 0x4c, 0x84, 0x67, 0x9c, 0x20 };
+#endif
+
+#ifdef XN_INIT5
+/* 1MBPS:
+ * 2MBPS:
+ *  p=1 ~  575us
+ *  p=2 ~ 1016us
+ *  p=3 ~ 1460us
+ *  p=4 ~ 1907us
+ */
+static const uint8_t demodcal[6] = {0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03};
+static const uint8_t rfcal[8] = {0x3e, 0xc9, 220, 0x80, 0x61, 0xbb, 0xab, 0x9c};
+static const uint8_t bbcal[6] = {0x3f, 0x4c, 0x84, 0x60, 0x9c, 0x20};
+#endif
+
+#ifdef XN_INIT6
+/* 1MBPS:
+ *  p=1 ~  658us
+ *  p=2 ~ 1184us
+ *  p=3 ~ 1712us
+ *  p=4 ~ 2237us
+ * 2MBPS:
+ *  p=1 ~  550us
+ *  p=2 ~  969us
+ *  p=3 ~ 1387us
+ *  p=4 ~ 1811us
+ */
+static const uint8_t demodcal[6] = {0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03};
+static const uint8_t rfcal[8] = {0x3e, 0xc9, 220, 0x80, 0x61, 0xbb, 0xab, 0x9c};
+static const uint8_t bbcal[6] = {0x3f, 0x4c, 0x84, 0x00, 0x9c, 0x20};
+#endif
+
+#ifdef XN_INIT7 //xn297 datasheet (.doc)
+/* 1MBPS:
+ * 2MBPS:
+ *  p=1 ~  924us
+ *  p=2 ~ 1720us
+ *  p=3 ~ 2517us
+ */
+static const uint8_t demodcal[6] = {0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03};
+static const uint8_t rfcal[8] = {0x3e, 0xda, 0x9a, 0xB0, 0x79, 0xbb, 0xab, 0x9c};
+static const uint8_t bbcal[6] = {0x3f, 0xcd, 0x3f, 0x7f, 0x9c, 0x20};
+#endif
+
+#ifdef XN_INIT8
+/* 1MBPS:
+ *  p=1 ~  521us
+ *  p=2 ~  910us
+ *  p=3 ~ 1302us
+ *  p=4 ~ 1691us
+ *  p=5 ~ 2086us
+ *  p=6 ~
+ * 2MBPS: //a lot of "PACKAGE LOST"
+ *  p=1 ~    ?us
+ *  p=2 ~  696us
+ *  p=3 ~  980us
+ *  p=4 ~ 1266us
+ *  p=5 ~ 1550us
+ *  p=6 ~ 1836us
+ */
+static const uint8_t demodcal[6] = {0x39, 0x0b, 0xdf, 0xc4, 0xa7, 0x03};
+static const uint8_t rfcal[8] = {0x3e, 0xda, 0x9a, 0xB0, 0x79, 0xbb, 0xab, 0x9c};
+static const uint8_t bbcal[6] = {0x3f, 0xcd, 0x3f, 0x20, 0x9c, 0x20};
+#endif
+
 
 static volatile uint32_t irqtime;
 
@@ -32,7 +154,8 @@ void EXTI2_3_IRQHandler(void) {
         EXTI->PR |= XN297_IRQ_PIN; // Clear the pending bit
 
         irqtime = gettime();
-        uint8_t status = xn_writereg(STATUS, (1 << RX_DR) + (1 << TX_DS) + (1 << MAX_RT));
+        uint8_t status = xn_writereg(STATUS,
+                (1 << RX_DR) + (1 << TX_DS) + (1 << MAX_RT));
 
         xn_debug_irq_handler(status);
         xn_irq_handler(status);

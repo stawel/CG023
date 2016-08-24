@@ -36,7 +36,7 @@
 #include <math.h>
 #include "3dmath.h"
 
-#define ENABLE_DEBUG
+//#define ENABLE_DEBUG
 #include "xn_debug.h"
 
 

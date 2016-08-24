@@ -37,6 +37,10 @@
 
 #include "defines.h"
 
+#define ENABLE_DEBUG
+#include "xn_debug.h"
+
+/*
 // Kp											ROLL       PITCH     YAW
 float pidkp[PIDNUMBER] = { 16.0e-2, 16.0e-2, 10e-1 };
 
@@ -45,9 +49,11 @@ float pidki[PIDNUMBER] = { 8e-1, 8e-1, 5e-1 };
 
 // Kd											ROLL       PITCH     YAW
 float pidkd[PIDNUMBER] = { 8.8e-1, 8.8e-1, 5.0e-1 };
+*/
 
-// "setpoint weighting" 0.0 - 1.0 where 0.0 = normal pid
-float b[3] = { 0.3, 0.3, 0.0 };
+float pidkp[PIDNUMBER] = { 2.0e-2, 2.0e-2, 10e-1 };
+float pidki[PIDNUMBER] = { 4.0e-2, 4.0e-2, 0.0f };
+float pidkd[PIDNUMBER] = { 0.0f, 0.0f, 0.0f };
 
 /*
  float pidkp[PIDNUMBER] = { 7.0e-2 , 7.0e-2 , 5e-1 };
@@ -98,9 +104,9 @@ void pid_precalc() {
 
 float pid(int x) {
 
-    if (onground) {
+/*    if (onground) {
         ierror[x] *= 0.8f;
-    }
+    }*/
 
     int iwindup = 0;
     if ((pidoutput[x] == outlimit[x]) && (error[x] > 0)) {
@@ -134,7 +140,7 @@ float pid(int x) {
     limitf(&ierror[x], integrallimit[x]);
 
     // P term
-    pidoutput[x] = error[x] * (1 - b[x]) * pidkp[x];
+    pidoutput[x] = error[x] * pidkp[x];
 
     // b
   //  pidoutput[x] += -(b[x]) * pidkp[x] * gyro[x];

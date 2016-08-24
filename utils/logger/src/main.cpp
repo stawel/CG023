@@ -27,6 +27,8 @@
 #define BINARY_OUTPUT
 //#define PRINT_PACKAGE_NR
 
+//#define ENABLE_2MBPS_DEBUG
+
 // Set up nRF24L01 radio on SPI bus plus CE/CS pins
 static RF24 radio(RF_CE_PIN, RF_CS_PIN);
 
@@ -155,8 +157,11 @@ void setupRadio(void)
     // radio config
     radio.setChannel(RF_CHANNEL);
 
+#ifdef ENABLE_2MBPS_DEBUG
+    radio.setDataRate(RF24_2MBPS);
+#else
     radio.setDataRate(RF24_1MBPS);
-    //radio.setDataRate(RF24_2MBPS);
+#endif
 
     radio.setCRCLength(RF24_CRC_DISABLED);
     radio.setPayloadSize(RF_PAYLOAD_SIZE);

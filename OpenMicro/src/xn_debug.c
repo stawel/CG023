@@ -4,15 +4,18 @@
 #include "drv_time.h"
 #include "drv_spi.h"
 
-//#define ENABLE_DEBUG
+#define ENABLE_DEBUG
 #include "xn_debug.h"
+
+//#define ENABLE_2MBPS_DEBUG
 
 #define XN_DEBUG_BUFFER     256
 #define XN_DEBUG_PACKAGE        15
 #define XN_DEBUG_PAYLOAD_SIZE   (XN_DEBUG_PACKAGE+1)   //+1 - package_nr
 #define XN_DEBUG_CHANNEL    5
+
 //TODO: fix timelimit
-#define XN_DEBUG_TIMELIMIT  500
+#define XN_DEBUG_TIMELIMIT  1300
 
 static const uint8_t txaddress[5] = { 0xcc, 0xcc, 0xcc, 0xcc, 0xcc };
 static uint8_t buf[XN_DEBUG_BUFFER];
@@ -165,7 +168,11 @@ static void xn_debug_start_transmission() {
         xn_ceoff();
         xn_writereg(STATUS, (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT));
         xn_writereg(CONFIG, (1 << PWR_UP) | (1 << CRCO) | (1 << EN_CRC)); // power up, crc enabled, PTX
+#ifdef ENABLE_2MBPS_DEBUG
+        xn_writereg(RF_SETUP, (1 << RF_PWR) | (1<<RF_DR));
+#else
         xn_writereg(RF_SETUP, (1 << RF_PWR) /*| (1<<RF_DR)*/);
+#endif
         xn_writereg(RF_CH, XN_DEBUG_CHANNEL);
         xn_debug_send_data();
         xn_ceon();

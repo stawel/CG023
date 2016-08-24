@@ -3,7 +3,7 @@ import sys
 import serial
 import struct
 import collections
-
+import time
 
 port_name = '/dev/ttyUSB0'
 uart = serial.Serial(port_name,2000000,timeout=0.010)
@@ -107,5 +107,7 @@ def uart_parse_stream():
     sys.stdout.flush()
 
 
-#while True:
-#    uart_parse_stream()
+if __name__ == "__main__":
+    while True:
+        uart_parse_stream()
+        time.sleep(0.05)

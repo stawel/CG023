@@ -36,7 +36,7 @@
 #include "drv_fmc.h"
 #include "sixaxis.h"
 
-//#define ENABLE_DEBUG
+#define ENABLE_DEBUG
 #include "xn_debug.h"
 
 extern float rx[7];
@@ -152,12 +152,20 @@ void control(void) {
 
     error[ROLL] = rx[ROLL] * (float) MAX_RATE * DEGTORAD + world_z_quaternion[1];
     error[PITCH] = rx[PITCH] * (float) MAX_RATE * DEGTORAD + world_z_quaternion[2];
-    error[YAW] = rx[YAW] * (float) MAX_RATEYAW * DEGTORAD - gyro[YAW]*0.1;
+    error[YAW] = rx[YAW] * (float) MAX_RATEYAW * DEGTORAD - gyro[YAW];
 
+
+/*
+    error[ROLL] = world_z_quaternion[1];
+    error[PITCH] = world_z_quaternion[2];
+    error[YAW] = - gyro[YAW];
+*/
 //    error[YAW] = 0.;
 //    error[ROLL] = 0.;
 //    error[PITCH] = 0.;
-    LogDebug("E: ", error[ROLL], " ", error[PITCH], " ", error[YAW]);
+
+//    LogDebug("R: ", rx[ROLL] * (float) MAX_RATE * DEGTORAD, " ", rx[PITCH] * (float) MAX_RATE * DEGTORAD, " ", rx[YAW] * (float) MAX_RATE * DEGTORAD);
+//    LogDebug("E: ", error[ROLL], " ", error[PITCH], " ", error[YAW]);
 
     pid_precalc();
 
@@ -165,7 +173,10 @@ void control(void) {
     pid(PITCH);
     pid(YAW);
 
-    LogDebug("O: ", pidoutput[ROLL], " ", pidoutput[PITCH], " ", pidoutput[YAW]);
+    extern float ierror[3];
+    LogDebug("r: ", error[ROLL], " ", pidoutput[ROLL], " ", ierror[ROLL]);
+
+//    LogDebug("O: ", pidoutput[ROLL], " ", pidoutput[PITCH], " ", pidoutput[YAW]);
 
 
     float throttle;
