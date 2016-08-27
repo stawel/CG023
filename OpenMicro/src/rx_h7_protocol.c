@@ -117,10 +117,11 @@ void decode_h7(void) {
     } else {
 
         failsafe = 0;
-        rx[3] = 0.00390625f * (225 - rxdata[0]);
-        rx[1] = (((int) rxdata[3]) - 112) * 0.00166666f;
-        rx[0] = (((int) rxdata[2]) - 112) * 0.00166666f; // roll
-        rx[2] = (-((int) rxdata[1]) + 112) * 0.00166666f;
+
+        rx[THROTTLE]= 0.00390625f * (225 - rxdata[0]);
+        rx[PITCH]   = (((int) rxdata[3]) - 112) * 0.00166666f;
+        rx[ROLL]    = (((int) rxdata[2]) - 112) * 0.00166666f; // roll
+        rx[YAW]     = (-((int) rxdata[1]) + 112) * 0.00166666f;
 
         //rxdata[4] L-R: default:32, (63..1)
         //rxdata[5] F-B: default:32, (1..63)

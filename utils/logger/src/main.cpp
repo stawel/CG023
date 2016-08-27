@@ -11,8 +11,9 @@
 #define RF_IRQ_PIN                     (2)
 
 
+#define CRC_SIZE                    2
 //radio config
-#define RF_PAYLOAD_SIZE             15+1   //+1 - package_nr
+#define RF_PAYLOAD_SIZE             15 + 1 + CRC_SIZE   //+1 - package_nr
 #define RF_CHANNEL                  5
 #define RF_ADDR_WIDTH               5
 #define RADIO_ID                    {0xcc, 0xcc, 0xcc, 0xcc, 0xcc}
@@ -138,7 +139,7 @@ void handleNrfIrq()
             packetLen = RF_PAYLOAD_SIZE;
 
         radio.read(buf, packetLen);
-        xn297_scramble_data(buf, packetLen, RF_ADDR_WIDTH);
+        xn297_scramble_data(buf, packetLen - CRC_SIZE, RF_ADDR_WIDTH);
         dumpData(buf, packetLen);
     }
 }  

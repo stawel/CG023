@@ -26,7 +26,7 @@
 #define MIDPOINT_RULE_INTEGRAL
 //#define SIMPSON_RULE_INTEGRAL
 
-//#define NORMAL_DTERM
+#define NORMAL_DTERM
 //#define SECOND_ORDER_DTERM
 //#define NEW_DTERM
 
@@ -51,10 +51,13 @@ float pidki[PIDNUMBER] = { 8e-1, 8e-1, 5e-1 };
 float pidkd[PIDNUMBER] = { 8.8e-1, 8.8e-1, 5.0e-1 };
 */
 
-float pidkp[PIDNUMBER] = { 2.0e-2, 2.0e-2, 10e-1 };
-float pidki[PIDNUMBER] = { 4.0e-2, 4.0e-2, 0.0f };
-float pidkd[PIDNUMBER] = { 0.0f, 0.0f, 0.0f };
-
+/*float pidkp[PIDNUMBER] = { 1./512., 1./512., 10e-1 };
+float pidki[PIDNUMBER] = { 1./512., 1./512., 0.0f };
+float pidkd[PIDNUMBER] = { 1./512., 1./512., 0.0f };
+*/
+float pidkp[PIDNUMBER] = { 4/32., 4/32., 10e-1 };
+float pidki[PIDNUMBER] = { 0., 0., 0.0f };
+float pidkd[PIDNUMBER] = { 4*-8., 4*-8., 0.0f };
 /*
  float pidkp[PIDNUMBER] = { 7.0e-2 , 7.0e-2 , 5e-1 };
  float pidki[PIDNUMBER] = { 2e-1 , 2e-1 , 5e-1 };
@@ -62,7 +65,7 @@ float pidkd[PIDNUMBER] = { 0.0f, 0.0f, 0.0f };
  */
 
 // output limit			
-const float outlimit[PIDNUMBER] = { 0.8, 0.8, 0.4 };
+static const float outlimit[PIDNUMBER] = { 0.8, 0.8, 0.4 };
 
 // limit of integral term (abs)
 const float integrallimit[PIDNUMBER] = { 0.8, 0.8, 0.4 };
@@ -104,9 +107,9 @@ void pid_precalc() {
 
 float pid(int x) {
 
-/*    if (onground) {
+    if (onground) {
         ierror[x] *= 0.8f;
-    }*/
+    }
 
     int iwindup = 0;
     if ((pidoutput[x] == outlimit[x]) && (error[x] > 0)) {
@@ -119,7 +122,7 @@ float pid(int x) {
 #ifdef MIDPOINT_RULE_INTEGRAL
         // trapezoidal rule instead of rectangular
         ierror[x] = ierror[x]
-                + (error[x] + lasterror[x]) * 0.5f * pidki[x] * looptime;
+                + (error[x] + lasterror[x]) * 0.5f * pidki[x];// * looptime;
         lasterror[x] = error[x];
 #endif
 
@@ -151,8 +154,8 @@ float pid(int x) {
     // D term
 
 #ifdef NORMAL_DTERM
-    pidoutput[x] = pidoutput[x] - (gyro[x] - lastrate[x]) * pidkd[x] * timefactor;
-    lastrate[x] = gyro[x];
+    pidoutput[x] += pidoutput[x] - (error[x] - lastrate[x]) * pidkd[x];
+    lastrate[x] = error[x];
 #endif
 
 #ifdef SECOND_ORDER_DTERM

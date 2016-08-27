@@ -14,9 +14,10 @@
 
 #define AUXNUMBER 6
 
-#define ROLL 0
-#define PITCH 1
+#define PITCH 0
+#define ROLL 1
 #define YAW 2
+#define THROTTLE 3
 
 #define RXMODE_BIND 0
 #define RXMODE_NORMAL (!RXMODE_BIND)

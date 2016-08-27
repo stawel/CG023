@@ -143,6 +143,14 @@ void control(void) {
     // check for accelerometer calibration command
     check_onground();
 
+    float throttle;
+
+// map throttle so under 10% it is zero
+    if (rx[THROTTLE] < 0.1f)
+        throttle = 0;
+    else
+        throttle = (rx[THROTTLE] - 0.1f) * 1.11111111f;
+
 // rate only build
     //TODO: change ROLL, PITCH, YAW
 /*    error[ROLL] = rx[ROLL] * (float) MAX_RATE * DEGTORAD + gyro[1]*0.1;
@@ -150,10 +158,17 @@ void control(void) {
     error[YAW] = rx[YAW] * (float) MAX_RATEYAW * DEGTORAD - gyro[YAW]*0.1;
 */
 
+/*
     error[ROLL] = rx[ROLL] * (float) MAX_RATE * DEGTORAD + world_z_quaternion[1];
     error[PITCH] = rx[PITCH] * (float) MAX_RATE * DEGTORAD + world_z_quaternion[2];
     error[YAW] = rx[YAW] * (float) MAX_RATEYAW * DEGTORAD - gyro[YAW];
+*/
 
+//    error[ROLL] =  world_z_quaternion[1];
+    error[ROLL] = 0;
+    error[PITCH] =  world_z_quaternion[2];
+//    error[PITCH] = -gyro[PITCH];
+    error[YAW] = 0;//rx[YAW] * (float) MAX_RATEYAW * DEGTORAD - gyro[YAW];
 
 /*
     error[ROLL] = world_z_quaternion[1];
@@ -167,25 +182,25 @@ void control(void) {
 //    LogDebug("R: ", rx[ROLL] * (float) MAX_RATE * DEGTORAD, " ", rx[PITCH] * (float) MAX_RATE * DEGTORAD, " ", rx[YAW] * (float) MAX_RATE * DEGTORAD);
 //    LogDebug("E: ", error[ROLL], " ", error[PITCH], " ", error[YAW]);
 
-    pid_precalc();
+//    pid_precalc();
 
-    pid(ROLL);
-    pid(PITCH);
-    pid(YAW);
+
+
+    pidoutput[PITCH] = rx[PITCH] -gyro[PITCH]/32. + world_z_quaternion[2]/4.;
+    pidoutput[ROLL] = rx[ROLL] +gyro[ROLL]/32. + world_z_quaternion[1]/4.;
+    error[PITCH] = 0.;//-gyro[PITCH];
+//    pidoutput[ROLL] = 0.0;
+    pidoutput[YAW] = 10.*rx[YAW] -gyro[YAW];
+
+//    pid(ROLL);
+//    pid(PITCH);
+//    pid(YAW);
+    const float outlimit[PIDNUMBER] = { 0.8, 0.8, 0.4 };
+    limitf(&pidoutput[PITCH], outlimit[PITCH]);
 
     extern float ierror[3];
-    LogDebug("r: ", gettime(), " ", error[ROLL], " ", pidoutput[ROLL], " ", ierror[ROLL]);
 
-//    LogDebug("O: ", pidoutput[ROLL], " ", pidoutput[PITCH], " ", pidoutput[YAW]);
-
-
-    float throttle;
-
-// map throttle so under 10% it is zero	
-    if (rx[3] < 0.1f)
-        throttle = 0;
-    else
-        throttle = (rx[3] - 0.1f) * 1.11111111f;
+//    LogDebug("r: ", gettime(), " ", error[PITCH], " ", pidoutput[PITCH], " ", world_z_quaternion[2], " ", throttle);
 
 // turn motors off if throttle is off and pitch / roll sticks are centered
     if (failsafe || throttle < 0.001f) {
